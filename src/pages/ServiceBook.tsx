@@ -5,6 +5,8 @@ import { Stepper } from "../components/Stepper";
 import { Button, FormField, Input, Select, Textarea } from "../components/ui";
 import { shopProducts } from "../data/catalog";
 import { submitForm } from "../lib/forms";
+import { api, useApi } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import { track } from "../lib/analytics";
 import { useSeo } from "../lib/seo";
 import { cx } from "../lib/format";
@@ -12,11 +14,14 @@ import { IconCheck } from "../components/Icons";
 
 const STEPS = ["Service", "Unit", "Date & time", "Contact & address", "Review"];
 const SLOTS = ["Morning (9 AM – 12 NN)", "Afternoon (1 PM – 3 PM)", "Late afternoon (3 PM – 6 PM)"];
+const slotCode = (s: string) => (s.startsWith("Late") ? "late-afternoon" : s.startsWith("Afternoon") ? "afternoon" : s ? "morning" : undefined);
 
 export default function ServiceBook() {
   const [sp] = useSearchParams();
   const [step, setStep] = useState(0);
-  const [d, setD] = useState({ service: sp.get("service") ?? "", unit: sp.get("unit") ?? "", date: "", slot: "", name: "", phone: "", email: "", address: "", city: "", notes: "" });
+  const { user } = useAuth();
+  const [sendError, setSendError] = useState("");
+  const [d, setD] = useState({ service: sp.get("service") ?? "", unit: sp.get("unit") ?? "", date: "", slot: "", name: user ? `${user.firstName} ${user.lastName}` : "", phone: user?.phone ?? "", email: user?.email ?? "", address: "", city: "", notes: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
   const [sending, setSending] = useState(false);
@@ -43,11 +48,17 @@ export default function ServiceBook() {
   };
   const next = () => validate() && setStep((s) => s + 1);
   const confirm = async () => {
-    setSending(true);
+    setSending(true); setSendError("");
     try {
-      await submitForm(`Service booking — ${svc?.label}`, { Service: svc?.label ?? "", Unit: unitLabel, "Preferred date": d.date, "Preferred time": d.slot, Name: d.name, Mobile: d.phone, Email: d.email, Address: `${d.address}, ${d.city}`, Notes: d.notes });
+      if (useApi) await api("/bookings", {
+        auth: "customer",
+        body: { service: d.service, unit: d.unit, date: d.date, slot: slotCode(d.slot), name: d.name, phone: d.phone, email: d.email || undefined, address: d.address, city: d.city, notes: d.notes || undefined },
+      });
+      else await submitForm(`Service booking — ${svc?.label}`, { Service: svc?.label ?? "", Unit: unitLabel, "Preferred date": d.date, "Preferred time": d.slot, Name: d.name, Mobile: d.phone, Email: d.email, Address: `${d.address}, ${d.city}`, Notes: d.notes });
       track(d.service === "water-test" ? "book_water_test" : "book_installation", { service: d.service, unit: d.unit });
       setDone(true);
+    } catch (x) {
+      setSendError((x as Error).message);
     } finally { setSending(false); }
   };
 
@@ -96,6 +107,7 @@ export default function ServiceBook() {
           <dl className="divide-y divide-slate-200 rounded-card ring-1 ring-slate-200">{[["Service", svc?.label], ["Unit", unitLabel], ["Preferred slot", `${d.date}, ${d.slot}`], ["Name", d.name], ["Mobile", d.phone], ["Email", d.email || "—"], ["Address", `${d.address}, ${d.city}`]].map(([k, v]) => (
             <div key={k} className="flex flex-wrap justify-between gap-2 px-4 py-3"><dt className="text-slate-600">{k}</dt><dd className="font-semibold">{v}</dd></div>))}</dl>
           <p className="mt-3 text-[15px] text-slate-700">HIQ will call you to confirm the schedule.</p></section>}
+        {sendError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-[15px] font-medium text-error ring-1 ring-red-200">{sendError}</p>}
         <div className="flex justify-between pt-2">
           <Button type="button" variant="ghost" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>Back</Button>
           <Button type="submit" variant="secondary" disabled={sending}>{step < 4 ? "Continue" : sending ? "Sending…" : "Confirm booking"}</Button>

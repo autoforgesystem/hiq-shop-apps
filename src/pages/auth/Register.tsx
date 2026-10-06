@@ -43,7 +43,7 @@ export default function Register() {
     setE(x);
     if (Object.keys(x).length) return document.getElementById(`rg-${Object.keys(x)[0]}`)?.focus();
     setBusy(true);
-    const r = await register({ firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, password: d.password });
+    const r = await register({ firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, password: d.password, marketingOptIn: d.updates });
     if (!r.ok) { setBusy(false); return setE({ [r.field ?? "form"]: r.error }); }
     show(`Mabuhay, ${d.firstName.trim()}! Your account is ready.`);
     nav(next, { replace: true });

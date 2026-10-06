@@ -7,15 +7,22 @@ import { useSeo } from "../lib/seo";
 import { track } from "../lib/analytics";
 import { cx } from "../lib/format";
 import { IconCheck } from "../components/Icons";
+import { useAuth } from "../lib/auth";
+import { api, useApi } from "../lib/api";
+import { filters } from "../data/catalog";
 
 const STEPS = ["Contact", "Delivery", "Installation", "Payment", "Review"];
 const PAY = ["Credit or debit card", "GCash", "Maya", "Online banking"];
+const PAY_CODES: Record<string, string> = { "Credit or debit card": "card", GCash: "gcash", Maya: "maya", "Online banking": "online_banking" };
 
 export default function Checkout() {
   const { lines, clear } = useCommerce();
   const nav = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
-  const [d, setD] = useState({ name: "", email: "", phone: "", address: "", city: "", province: "", postal: "", installDate: "", installSlot: "", pay: "" });
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
+  const [d, setD] = useState({ name: user ? `${user.firstName} ${user.lastName}` : "", email: user?.email ?? "", phone: user?.phone ?? "", address: "", city: "", province: "", postal: "", installDate: "", installSlot: "", pay: "" });
   const [e, setE] = useState<Record<string, string>>({});
   useSeo({ title: "Checkout", description: "Checkout", path: "/checkout", noindex: true });
   const needsInstall = lines.some((l) => l.options?.installation === "Yes");
@@ -30,7 +37,31 @@ export default function Checkout() {
     if (step === 3 && !d.pay) x.pay = "Choose how you'd like to pay.";
     setE(x); return !Object.keys(x).length;
   };
+  /** API mode: the server prices the order and returns the order number. */
+  const placeWithApi = async () => {
+    setPlacing(true); setPlaceError("");
+    try {
+      const order = await api<{ id: string; requiresQuote: boolean }>("/orders", {
+        auth: "customer",
+        body: {
+          contact: { name: d.name, email: d.email, phone: d.phone },
+          shipping: { line1: d.address, city: d.city, province: d.province, postal: d.postal || undefined },
+          paymentMethod: PAY_CODES[d.pay],
+          install: needsInstall && (d.installDate || d.installSlot) ? { date: d.installDate || undefined, slot: d.installSlot.toLowerCase() || undefined } : undefined,
+          lines: lines.map((l) => filters.some((f) => f.id === l.sku)
+            ? { filterSkuId: l.sku, qty: l.qty }
+            : { productSlug: l.sku, qty: l.qty, configuration: l.options?.configuration, withInstallation: l.options?.installation === "Yes" }),
+        },
+      });
+      try { sessionStorage.setItem(`hiq_order_${order.id}`, JSON.stringify({ id: order.id, contact: d, needsInstall, requiresQuote: order.requiresQuote })); } catch { /* ignore */ }
+      track("purchase", { transaction_id: order.id, items: lines.map((l) => ({ item_id: l.sku, quantity: l.qty })), currency: "PHP" });
+      clear(); nav(`/order/${order.id}`);
+    } catch (x) {
+      setPlaceError((x as Error).message);
+    } finally { setPlacing(false); }
+  };
   const place = () => {
+    if (useApi) return void placeWithApi();
     const id = "HIQ-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     try { sessionStorage.setItem(`hiq_order_${id}`, JSON.stringify({ id, lines, contact: d, needsInstall })); } catch { /* ignore */ }
     track("purchase", { transaction_id: id, items: lines.map((l) => ({ item_id: l.sku, quantity: l.qty })), currency: "PHP" });
@@ -44,7 +75,7 @@ export default function Checkout() {
     <div className="page grid gap-10 py-10 lg:grid-cols-[1fr_340px]">
       <div className="max-w-xl">
         <h1 className="text-[32px]">Checkout</h1>
-        <p className="mt-1 text-[15px] text-slate-600">Checking out as a guest. <Link to="/login?next=/checkout" className="link">Sign in</Link></p>
+        <p className="mt-1 text-[15px] text-slate-600">{user ? <>Signed in as {user.email}</> : <>Checking out as a guest. <Link to="/login?next=/checkout" className="link">Sign in</Link></>}</p>
         <div className="mt-6"><Stepper steps={STEPS} current={step} /></div>
         <form noValidate className="mt-8 space-y-5" onSubmit={(ev) => { ev.preventDefault(); if (step === 4) place(); else if (validate()) setStep(step + 1); }}>
           {step === 0 && <>{F("name", "Full name", { autoComplete: "name" })}{F("email", "Email", { type: "email", autoComplete: "email" })}{F("phone", "Mobile number", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "0917 123 4567" })}</>}
@@ -59,9 +90,10 @@ export default function Checkout() {
             {e.pay && <p role="alert" className="mt-2 text-sm font-medium text-error">{e.pay}</p>}
             <p className="mt-3 text-sm text-slate-600">Payment is processed securely by the commerce platform. This demo doesn't take payment.</p></fieldset>}
           {step === 4 && <dl className="divide-y divide-slate-200 rounded-card ring-1 ring-slate-200">{[["Contact", `${d.name} · ${d.email} · ${d.phone}`], ["Deliver to", `${d.address}, ${d.city}, ${d.province} ${d.postal}`], ["Installation", needsInstall ? `${d.installDate || "HIQ to propose"} ${d.installSlot}` : "Not included"], ["Payment", d.pay]].map(([k, v]) => <div key={k} className="px-4 py-3"><dt className="text-sm text-slate-600">{k}</dt><dd className="font-semibold">{v}</dd></div>)}</dl>}
+          {placeError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-[15px] font-medium text-error ring-1 ring-red-200">{placeError}</p>}
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={() => (step ? setStep(step - 1) : nav("/cart"))}>Back</Button>
-            <Button type="submit" variant={step === 4 ? "primary" : "secondary"}>{step === 4 ? "Place order" : "Continue"}</Button>
+            <Button type="submit" variant={step === 4 ? "primary" : "secondary"} disabled={placing} aria-busy={placing}>{step === 4 ? (placing ? "Placing order…" : "Place order") : "Continue"}</Button>
           </div>
         </form>
       </div>

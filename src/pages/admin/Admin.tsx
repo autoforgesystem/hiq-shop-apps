@@ -3,7 +3,8 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { Button, ButtonLink, FormField, Input } from "../../components/ui";
 import { IconExternal } from "../../components/Icons";
 import { LogoMark } from "../../components/Logo";
-import { useCatalog, repository } from "../../data/catalogStore";
+import { useCatalog, repository, loadCatalog } from "../../data/catalogStore";
+import { api, tokens, useApi } from "../../lib/api";
 import { PHOTO_DEFAULTS, PHOTO_PLACES, type PhotoKey } from "../../data/images";
 import { useSeo } from "../../lib/seo";
 import { cx } from "../../lib/format";
@@ -16,18 +17,34 @@ const AdminPhotos = lazy(() => import("./AdminPhotos"));
 const AdminData = lazy(() => import("./AdminData"));
 
 /**
- * DEMO SIGN-IN ONLY. The password sits in the browser bundle, so this keeps casual visitors out of the
- * screens but is not security. Replace with real sign-in when the backend exists (docs/ADMIN.md).
+ * With VITE_API_URL set, admins sign in with their account on the HIQ API, which checks every change.
+ * Otherwise this is a DEMO SIGN-IN: the password sits in the browser bundle, so it keeps casual visitors out
+ * of the screens but is not security (docs/ADMIN.md).
  */
 const DEMO_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "hiq-admin";
 const SESSION_KEY = "hiq-admin-session";
-const readSession = () => { try { return sessionStorage.getItem(SESSION_KEY) === "1"; } catch { return false; } };
+const readSession = () => {
+  if (useApi) return !!tokens.get("admin");
+  try { return sessionStorage.getItem(SESSION_KEY) === "1"; } catch { return false; }
+};
 
 function SignIn({ onDone }: { onDone: () => void }) {
+  const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [error, setError] = useState("");
-  const submit = (e: FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (useApi) {
+      setBusy(true);
+      try {
+        const r = await api<{ token: string }>("/admin/auth/login", { body: { email, password: pw } });
+        tokens.set("admin", r.token, false); // admin sessions end when the tab closes
+        await loadCatalog(); // now includes hidden products
+        onDone();
+      } catch (x) { setError((x as Error).message); } finally { setBusy(false); }
+      return;
+    }
     if (pw !== DEMO_PASSWORD) return setError("That password isn't right. Please try again.");
     try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* still let them in for this page view */ }
     onDone();
@@ -38,11 +55,14 @@ function SignIn({ onDone }: { onDone: () => void }) {
         <LogoMark size={48} />
         <h1 className="mt-3 text-[28px]">Shop admin</h1>
         <p className="mt-2 text-[15px] text-slate-600">Sign in to manage products, photos and filters.</p>
-        <div className="mt-6"><FormField label="Password" id="admin-pw" error={error}>
-          <Input id="admin-pw" type="password" autoComplete="current-password" value={pw} onChange={(e) => { setPw(e.target.value); setError(""); }} autoFocus aria-invalid={!!error} aria-describedby={error ? "admin-pw-err" : undefined} />
+        {useApi && <div className="mt-6"><FormField label="Email" id="admin-email">
+          <Input id="admin-email" type="email" autoComplete="username" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} autoFocus />
+        </FormField></div>}
+        <div className={useApi ? "mt-4" : "mt-6"}><FormField label="Password" id="admin-pw" error={error}>
+          <Input id="admin-pw" type="password" autoComplete="current-password" value={pw} onChange={(e) => { setPw(e.target.value); setError(""); }} autoFocus={!useApi} aria-invalid={!!error} aria-describedby={error ? "admin-pw-err" : undefined} />
         </FormField></div>
-        <Button type="submit" full className="mt-5">Sign in</Button>
-        <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-warning ring-1 ring-amber-200">Demo sign-in. The password is <strong>{import.meta.env.VITE_ADMIN_PASSWORD ? "set in .env" : "hiq-admin"}</strong>. Real accounts come with the database.</p>
+        <Button type="submit" full className="mt-5" disabled={busy} aria-busy={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
+        {!useApi && <p className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-warning ring-1 ring-amber-200">Demo sign-in. The password is <strong>{import.meta.env.VITE_ADMIN_PASSWORD ? "set in .env" : "hiq-admin"}</strong>. Real accounts come with the database.</p>}
       </form>
     </div>
   );
@@ -101,7 +121,11 @@ export default function Admin() {
   useSeo({ title: "Shop admin", description: "HIQ Shop administration.", path: "/admin", noindex: true });
   const [signedIn, setSignedIn] = useState(readSession);
   if (!signedIn) return <SignIn onDone={() => setSignedIn(true)} />;
-  const signOut = () => { try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ } setSignedIn(false); };
+  const signOut = () => {
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+    if (useApi) { tokens.set("admin", null); void loadCatalog(); } // back to the public catalogue
+    setSignedIn(false);
+  };
 
   return (
     <div className="min-h-[100dvh] bg-slate-50">

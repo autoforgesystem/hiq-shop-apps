@@ -2,11 +2,13 @@ import { useSyncExternalStore } from "react";
 import { applyCatalog, SEED_FILTERS, SEED_PRODUCTS } from "./catalog";
 import { PHOTO_DEFAULTS, PHOTOS, type PhotoKey } from "./images";
 import { MockCatalogRepository } from "./MockCatalogRepository";
+import { ApiCatalogRepository } from "./ApiCatalogRepository";
+import { useApi } from "../lib/api";
 import type { CatalogData, CatalogRepository, SitePhotos } from "./repository";
 import type { FilterSku, Product } from "./types";
 
-/** Swap this for an API-backed repository when the Postgres backend exists (see docs/ADMIN.md). */
-export const repository: CatalogRepository = new MockCatalogRepository();
+/** The HIQ API when VITE_API_URL is set, otherwise the browser-only mock (see docs/ADMIN.md). */
+export const repository: CatalogRepository = useApi ? new ApiCatalogRepository() : new MockCatalogRepository();
 
 let data: CatalogData = { products: SEED_PRODUCTS, filters: SEED_FILTERS, photos: {} };
 let version = 0;

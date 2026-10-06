@@ -3,6 +3,7 @@ import { Input } from "../../components/ui";
 import { IconCalendar, IconCheck, IconEye, IconEyeOff, IconFilter, IconWrench } from "../../components/Icons";
 import { LogoMark } from "../../components/Logo";
 import { cx } from "../../lib/format";
+import { useApi } from "../../lib/api";
 
 const PERKS = [
   { Icon: IconFilter, text: "Filter replacement reminders for every unit" },
@@ -33,7 +34,7 @@ export function AuthShell({ title, intro, children }: { title: string; intro: Re
         <div className="p-6 sm:p-10">
           <h1 className="text-[28px] sm:text-[34px]">{title}</h1>
           <p className="mt-2 text-[15px] text-slate-600">{intro}</p>
-          <div className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-warning ring-1 ring-amber-200">Demo only. Accounts are stored in this browser and nothing is sent to HIQ.</div>
+          {!useApi && <div className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-warning ring-1 ring-amber-200">Demo only. Accounts are stored in this browser and nothing is sent to HIQ.</div>}
           {children}
         </div>
       </div>

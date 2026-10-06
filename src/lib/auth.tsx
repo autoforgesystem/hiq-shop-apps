@@ -1,18 +1,19 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { DEMO_USERS, type DemoUser } from "../pages/auth/mockUsers";
 import { useLocalState } from "./useLocalState";
+import { api, ApiError, tokens, useApi } from "./api";
 
 /**
- * DEMO SIGN-IN ONLY. Accounts and passwords live in this browser, so this only shows how the screens
- * behave. Replace with the customer auth endpoints in /docs/API.md when the backend exists.
+ * Customer sign-in. With VITE_API_URL set it uses the HIQ API (../server); otherwise it is a DEMO that keeps
+ * accounts and passwords in this browser, only to show how the screens behave.
  */
 export type Customer = Omit<DemoUser, "password">;
 type Result = { ok: true } | { ok: false; error: string; field?: string };
 interface AuthCtx {
   user: Customer | null;
   login: (email: string, password: string, remember: boolean) => Promise<Result>;
-  register: (u: DemoUser) => Promise<Result>;
+  register: (u: DemoUser & { marketingOptIn?: boolean }) => Promise<Result>;
   logout: () => void;
 }
 
@@ -37,7 +38,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const find = (email: string) => [...DEMO_USERS, ...registered].find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
   const signIn = (u: Customer, remember?: boolean) => { writeSession(u, remember); setUser(u); };
 
+  // API mode: refresh the stored profile, and drop the session if the token has expired.
+  useEffect(() => {
+    if (!useApi || !tokens.get("customer")) return;
+    api<Customer>("/auth/me", { auth: "customer" }).then(setUser, (e) => { if (e instanceof ApiError && e.status === 401) { writeSession(null); setUser(null); } });
+  }, []);
+
+  const apiSession = async (path: string, body: object, remember = true): Promise<Result> => {
+    try {
+      const r = await api<{ token: string; customer: Customer }>(path, { body });
+      tokens.set("customer", r.token, remember);
+      signIn(r.customer, remember);
+      return { ok: true };
+    } catch (e) {
+      const err = e as ApiError;
+      return { ok: false, error: err.message, ...(err.status === 409 && { field: "email" }) };
+    }
+  };
+
   const login: AuthCtx["login"] = async (email, password, remember) => {
+    if (useApi) return apiSession("/auth/login", { email, password, remember }, remember);
     await wait();
     const u = find(email);
     if (!u || u.password !== password) return { ok: false, error: "That email and password don't match an account. Please try again." };
@@ -45,14 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
   const register: AuthCtx["register"] = async (u) => {
+    if (useApi) return apiSession("/auth/register", u);
     await wait();
     if (find(u.email)) return { ok: false, field: "email", error: "An account with this email already exists. Sign in instead." };
     const clean = { ...u, email: u.email.trim(), firstName: u.firstName.trim(), lastName: u.lastName.trim() };
-    setRegistered((r) => [...r, clean]);
+    const { marketingOptIn: _optIn, ...account } = clean;
+    setRegistered((r) => [...r, account]);
     signIn(toCustomer(clean));
     return { ok: true };
   };
-  const logout = () => { writeSession(null); setUser(null); };
+  const logout = () => { tokens.set("customer", null); writeSession(null); setUser(null); };
 
   return <Ctx.Provider value={{ user, login, register, logout }}>{children}</Ctx.Provider>;
 }

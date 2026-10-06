@@ -5,6 +5,7 @@ import { useToast } from "../../components/Toast";
 import { safeNext, useAuth } from "../../lib/auth";
 import { useSeo } from "../../lib/seo";
 import { DEMO_USERS } from "./mockUsers";
+import { useApi } from "../../lib/api";
 import { AuthShell, Checkbox, Divider, PasswordInput } from "./AuthShell";
 
 export default function Login() {
@@ -47,19 +48,22 @@ export default function Login() {
         </FormField>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Checkbox id="li-remember" checked={d.remember} onChange={(v) => setD({ ...d, remember: v })}>Keep me signed in</Checkbox>
-          <button type="button" className="link min-h-[44px] text-[15px]" onClick={() => show("Password reset needs the HIQ backend. Not available in this demo.")}>Forgot password?</button>
+          <button type="button" className="link min-h-[44px] text-[15px]" onClick={() => show(useApi ? "Password reset isn't available online yet. Call or email HIQ and we'll help." : "Password reset needs the HIQ backend. Not available in this demo.")}>Forgot password?</button>
         </div>
         <Button type="submit" variant="secondary" full disabled={busy} aria-busy={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
       </form>
 
-      <Divider>or try the demo</Divider>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-hiq-sky p-4">
-        <div className="text-[15px]">
-          <p className="font-semibold text-hiq-navy">Demo account</p>
-          <p className="text-slate-600">{demo.email} · {demo.password}</p>
+      {/* The demo account exists in demo mode, and on a dev server seeded with SEED_DEMO=true. */}
+      {(!useApi || import.meta.env.DEV) && <>
+        <Divider>or try the demo</Divider>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-hiq-sky p-4">
+          <div className="text-[15px]">
+            <p className="font-semibold text-hiq-navy">Demo account</p>
+            <p className="text-slate-600">{demo.email} · {demo.password}</p>
+          </div>
+          <Button type="button" variant="outline" onClick={() => { setD({ ...d, email: demo.email, password: demo.password }); setE({}); }}>Fill in</Button>
         </div>
-        <Button type="button" variant="outline" onClick={() => { setD({ ...d, email: demo.email, password: demo.password }); setE({}); }}>Fill in</Button>
-      </div>
+      </>}
       <p className="mt-6 text-center text-[15px] text-slate-600">Just want to buy? <Link to="/shop" className="link">Continue as a guest</Link></p>
     </AuthShell>
   );
