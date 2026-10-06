@@ -2,3 +2,8 @@
 .env
 .env.local
 .env.*.local
+
+# Installed and built locally or by Render; never committed
+node_modules
+dist
+*.tsbuildinfo

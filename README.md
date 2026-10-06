@@ -23,6 +23,17 @@ VITE_ADMIN_PASSWORD=              # demo admin password (default hiq-admin), not
 VITE_API_URL=                     # HIQ API in ../server, e.g. http://localhost:3000/api. Empty = mock data
 ```
 
+## Deploy to Render
+
+The `deploy/render` branch has a Blueprint (`render.yaml`) for a Render static site. Deploy the API first (`hiq-shop-server`, same branch name), because the site needs its address at build time.
+
+1. In Render, choose **New → Blueprint**, connect the `hiq-shop` repository and pick the `deploy/render` branch.
+2. When asked for `VITE_API_URL`, enter the API address with `/api`, e.g. `https://hiq-shop-api.onrender.com/api`.
+3. Deploy. Render runs `npm ci && npm run build` and publishes `dist/`. Every path rewrites to `index.html`, so links like `/shop` and `/account/orders` work.
+4. Copy the site's address (e.g. `https://hiq-shop.onrender.com`) into the API's `CORS_ORIGINS` setting and redeploy the API. Until then the browser blocks the site's calls to the API.
+
+`VITE_API_URL` is built into the site, so change it in Render and then redeploy the site. Leave it empty to publish the mock-data version.
+
 ## Where things live
 | Path | What |
 |---|---|
