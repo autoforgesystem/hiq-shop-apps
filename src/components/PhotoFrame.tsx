@@ -2,10 +2,11 @@ import type { PhotoSlot } from "../data/images";
 import { cx } from "../lib/format";
 
 /** Renders the real photo when supplied, otherwise a labelled placeholder frame. */
-export function PhotoFrame({ slot, className, ratio = "aspect-[4/3]", eager }: { slot: PhotoSlot; className?: string; ratio?: string; eager?: boolean }) {
+/** `sizes` tells the browser how wide the photo is shown, so it downloads the right file from `srcSet`. */
+export function PhotoFrame({ slot, className, ratio = "aspect-[4/3]", eager, sizes = "(min-width: 1024px) 50vw, 100vw" }: { slot: PhotoSlot; className?: string; ratio?: string; eager?: boolean; sizes?: string }) {
   if (slot.src) {
     return (
-      <img src={slot.src} srcSet={slot.srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={slot.alt}
+      <img src={slot.src} srcSet={slot.srcSet} sizes={sizes} alt={slot.alt}
         loading={eager ? "eager" : "lazy"} decoding="async" fetchPriority={eager ? "high" : undefined}
         className={cx("w-full rounded-card object-cover", ratio, className)} />
     );

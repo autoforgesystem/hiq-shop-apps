@@ -13,22 +13,25 @@ function PhotoSlotCard({ k }: { k: PhotoKey }) {
   const save = async (src: string | undefined, nextAlt = alt) => {
     try {
       await catalogAdmin.savePhoto(k, src ? { src, alt: nextAlt.trim() || PHOTO_DEFAULTS[k].alt } : null);
-      toast.show(src ? "Photo saved" : "Photo removed, the placeholder is back");
+      toast.show(src ? "Photo saved" : PHOTO_DEFAULTS[k].src ? "Photo removed, the built-in photo is back" : "Photo removed, the placeholder is back");
     } catch (e) { toast.show((e as Error).message, { tone: "error" }); }
   };
   const unused = PHOTO_PLACES[k].startsWith("Not shown");
+  const builtIn = PHOTO_DEFAULTS[k].src; // design photo shipped with the site (src/data/images.ts)
 
   return (
     <li className="flex flex-col rounded-card bg-white p-4 ring-1 ring-slate-200">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-600">{PHOTO_PLACES[k]}</p>
-        {current?.src ? <Badge tone="green">Photo added</Badge> : <Badge tone={unused ? "slate" : "amber"}>Placeholder</Badge>}
+        {current?.src ? <Badge tone="green">Photo added</Badge> : builtIn ? <Badge tone="blue">Built-in photo</Badge> : <Badge tone={unused ? "slate" : "amber"}>Placeholder</Badge>}
       </div>
       <p className="mt-1 text-[15px] font-semibold text-hiq-navy">{PHOTO_DEFAULTS[k].label}</p>
       <div className="mt-3">
         {current?.src
           ? <img src={current.src} alt="" className="aspect-[4/3] w-full rounded-lg bg-slate-100 object-cover" />
-          : <PhotoDrop label="Upload photo" compact onUploaded={([src]) => void save(src)} />}
+          : builtIn
+            ? <><img src={builtIn} alt="" className="aspect-[4/3] w-full rounded-lg bg-slate-100 object-cover" /><div className="mt-2"><PhotoDrop label="Replace photo" compact onUploaded={([src]) => void save(src)} /></div></>
+            : <PhotoDrop label="Upload photo" compact onUploaded={([src]) => void save(src)} />}
       </div>
       {current?.src && (
         <div className="mt-3 space-y-2">

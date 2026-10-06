@@ -20,7 +20,10 @@ function apply(next: CatalogData) {
   applyCatalog(next.products, next.filters);
   for (const k of Object.keys(PHOTO_DEFAULTS) as PhotoKey[]) {
     const o = next.photos[k];
-    Object.assign(PHOTOS[k], { src: o?.src, alt: o?.alt || PHOTO_DEFAULTS[k].alt });
+    // An admin upload replaces the built-in photo; otherwise keep the default (and its responsive sizes).
+    Object.assign(PHOTOS[k], o?.src
+      ? { src: o.src, srcSet: undefined, alt: o.alt || PHOTO_DEFAULTS[k].alt }
+      : { src: PHOTO_DEFAULTS[k].src, srcSet: PHOTO_DEFAULTS[k].srcSet, alt: PHOTO_DEFAULTS[k].alt });
   }
   version++;
   listeners.forEach((l) => l());

@@ -24,14 +24,18 @@ const NEED_TILES = [
   ["/filters", "Replacement filters", "Find the filters for your HIQ unit", IconFilter],
 ] as const;
 
+// Tile photos are AI-generated design images (public/img/photos/tile-*); replace with real HIQ product photos.
 const PRODUCT_TILES = [
-  ["/shop/under-sink", "Under-sink", "Out of sight, with a dedicated faucet"],
-  ["/shop/countertop", "Countertop", "Beside the sink, some need no power"],
-  ["/shop/dispensers", "Hot & cold dispensers", "Bottleless, plumbed in"],
-  ["/shop/whole-house", "Whole house", "Filtered water at every tap"],
-  ["/shop/replacement-filters", "Replacement filters", "Exact filters for your model"],
-  ["/business", "Commercial", "Request a quote"],
+  ["/shop/under-sink", "Under-sink", "Out of sight, with a dedicated faucet", "under-sink"],
+  ["/shop/countertop", "Countertop", "Beside the sink, some need no power", "countertop"],
+  ["/shop/dispensers", "Hot & cold dispensers", "Bottleless, plumbed in", "dispensers"],
+  ["/shop/whole-house", "Whole house", "Filtered water at every tap", "whole-house"],
+  ["/shop/replacement-filters", "Replacement filters", "Exact filters for your model", "replacement-filters"],
+  ["/business", "Commercial", "Request a quote", "commercial"],
 ] as const;
+const tilePhoto = (label: string, img: string) => ({
+  label, alt: "", src: `/img/photos/tile-${img}-640.webp`, srcSet: `/img/photos/tile-${img}-320.webp 320w, /img/photos/tile-${img}-640.webp 640w`,
+});
 
 const LOOP = [
   ["Filtration", "Matched to your measured water"],
@@ -97,9 +101,9 @@ export default function Home() {
         <div className="page section">
           <SectionTitle title="Shop by product" />
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PRODUCT_TILES.map(([to, t, d]) => (
+            {PRODUCT_TILES.map(([to, t, d, img]) => (
               <li key={to}><Link to={to} className="group flex items-center gap-4 rounded-card bg-white p-3 ring-1 ring-hiq-water hover:ring-hiq-blue">
-                <div className="w-28 shrink-0"><PhotoFrame slot={{ label: t, alt: "" }} ratio="aspect-square" /></div>
+                <div className="w-28 shrink-0"><PhotoFrame slot={tilePhoto(t, img)} ratio="aspect-square" sizes="112px" /></div>
                 <div><span className="font-display text-lg font-bold group-hover:text-hiq-blue">{t}</span><span className="mt-1 block text-[15px] text-slate-700">{d}</span></div>
               </Link></li>
             ))}

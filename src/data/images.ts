@@ -8,11 +8,15 @@ import type { Product } from "./types";
 export interface PhotoSlot { label: string; src?: string; srcSet?: string; alt: string }
 
 export const PHOTOS = {
-  hero: { label: "Modern Philippine condo kitchen, filtered water from the tap into a glass", alt: "Filtered water pouring from a kitchen faucet into a glass in a bright condo kitchen" },
+  // AI-generated with Higgsfield (Z Image) as a design image. Replace with real HIQ photography when available.
+  hero: { label: "Modern Philippine condo kitchen, filtered water from the tap into a glass", alt: "Filtered water pouring from a kitchen faucet into a glass in a bright condo kitchen", src: "/img/photos/hero-1600.webp", srcSet: "/img/photos/hero-800.webp 800w, /img/photos/hero-1600.webp 1600w" },
   family: { label: "Filipino family filling reusable glass bottles at the kitchen sink", alt: "A family filling reusable glass bottles at their kitchen sink" },
-  office: { label: "Office pantry with a bottleless hot & cold dispenser", alt: "An office pantry with a plumbed-in hot and cold water dispenser" },
-  technician: { label: "HIQ technician installing an under-sink system", alt: "An HIQ technician installing a water filtration system under a kitchen sink" },
-  glassBottles: { label: "Reusable glass bottles on a sunlit counter", alt: "Reusable glass water bottles lined up on a kitchen counter" },
+  // AI-generated with Higgsfield (Z Image) as design images. Replace with real HIQ photography when available.
+  office: { label: "Office pantry with a bottleless hot & cold dispenser", alt: "An office pantry with a plumbed-in hot and cold water dispenser", src: "/img/photos/office-1600.webp", srcSet: "/img/photos/office-800.webp 800w, /img/photos/office-1600.webp 1600w" },
+  technician: { label: "HIQ technician installing an under-sink system", alt: "A technician installing a water filtration system under a kitchen sink", src: "/img/photos/technician-1600.webp", srcSet: "/img/photos/technician-800.webp 800w, /img/photos/technician-1600.webp 1600w" },
+  // Key kept as "glassBottles" because saved admin photos use it. This shop shows filtration only; glass bottled water has its own site.
+  // AI-generated with Higgsfield (Z Image) as a design image. Replace with real HIQ photography when available.
+  glassBottles: { label: "Under-sink filtration system in a home kitchen", alt: "An under-sink water filtration system with three filter cartridges inside an open kitchen cabinet", src: "/img/photos/under-sink-filter-1600.webp", srcSet: "/img/photos/under-sink-filter-800.webp 800w, /img/photos/under-sink-filter-1600.webp 1600w" },
   hotel: { label: "Hotel table set with a branded reusable glass bottle", alt: "A hotel restaurant table set with a reusable glass water bottle" },
   waterTest: { label: "Technician testing tap water with a TDS meter", alt: "A technician measuring the TDS of tap water" },
   restaurant: { label: "Restaurant bar with HQ9 high-flow filtration", alt: "A restaurant bar counter with a commercial water filter" },

@@ -49,7 +49,7 @@ Everything below renders visibly on the site as `[… TBC]` (amber tag) until HI
 |---|---|
 | Real customer testimonials (3 sample cards labelled) | Home |
 | Star ratings / review counts — hidden until real reviews exist | — |
-| Lifestyle photography (8 slots) | `src/data/images.ts` (`PHOTOS`) — Home hero, glass bottles, technician, office, etc. |
+| Lifestyle photography (8 slots) | `src/data/images.ts` (`PHOTOS`). The home hero, the home/Eco "break free from plastic" photo (under-sink filter), the Service technician and the Business office pantry are AI-generated design images (`public/img/photos/`), as are the 6 "Shop by product" tiles on the home page (`tile-*`, set in `src/pages/Home.tsx`); replace them with real HIQ photography. This shop shows filtration only, no glass bottled water. |
 | Privacy policy, terms of sale `[LEGAL COPY TBC]` | /privacy, /terms |
 | Warranty policy `[WARRANTY TBC]` | /warranty-policy |
 | 13 planned guide articles (shown as "Coming soon") | `src/data/guide.ts` |
