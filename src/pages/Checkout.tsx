@@ -44,7 +44,7 @@ export default function Checkout() {
     <div className="page grid gap-10 py-10 lg:grid-cols-[1fr_340px]">
       <div className="max-w-xl">
         <h1 className="text-[32px]">Checkout</h1>
-        <p className="mt-1 text-[15px] text-slate-600">Checking out as a guest. <Link to="/account" className="link">Sign in</Link></p>
+        <p className="mt-1 text-[15px] text-slate-600">Checking out as a guest. <Link to="/login?next=/checkout" className="link">Sign in</Link></p>
         <div className="mt-6"><Stepper steps={STEPS} current={step} /></div>
         <form noValidate className="mt-8 space-y-5" onSubmit={(ev) => { ev.preventDefault(); if (step === 4) place(); else if (validate()) setStep(step + 1); }}>
           {step === 0 && <>{F("name", "Full name", { autoComplete: "name" })}{F("email", "Email", { type: "email", autoComplete: "email" })}{F("phone", "Mobile number", { type: "tel", inputMode: "tel", autoComplete: "tel", placeholder: "0917 123 4567" })}</>}

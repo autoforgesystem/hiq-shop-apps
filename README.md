@@ -31,9 +31,10 @@ VITE_ADMIN_PASSWORD=              # demo admin password (default hiq-admin), not
 | `src/lib/quiz.ts` | Find My System decision rules |
 | `src/commerce/` | `CommerceAdapter`, `MockAdapter`, `GoDaddyLinkAdapter` |
 | `src/lib/analytics.ts` | `dataLayer` events + consent-gated GTM |
+| `src/pages/auth/`, `src/lib/auth.tsx` | Customer sign-in & registration (demo only, browser storage). Demo login `juan@example.com` / `demo1234` |
 | `src/pages/admin/`, `src/data/catalogStore.ts` | Shop admin at `/admin` (demo password `hiq-admin`), see `docs/ADMIN.md` |
 | `content/PLACEHOLDERS.md` | Everything HIQ still needs to supply |
 | `docs/` | Commerce, API contract, assumptions |
 
 ## Routes
-`/` · `/shop` · `/shop/:category` · `/shop/need/:need` · `/product/:slug` · `/compare` · `/find-my-system` · `/filters` · `/service` · `/service/book` · `/rent` · `/business` · `/eco` · `/guide` · `/guide/:topic` · `/account/*` · `/cart` · `/checkout` · `/order/:id` · `/help` · `/contact` · `/privacy` · `/terms` · `/warranty-policy`
+`/` · `/shop` · `/shop/:category` · `/shop/need/:need` · `/product/:slug` · `/compare` · `/find-my-system` · `/filters` · `/service` · `/service/book` · `/rent` · `/business` · `/eco` · `/guide` · `/guide/:topic` · `/login` · `/register` · `/account/*` · `/cart` · `/checkout` · `/order/:id` · `/help` · `/contact` · `/privacy` · `/terms` · `/warranty-policy`

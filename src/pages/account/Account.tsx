@@ -1,6 +1,7 @@
-import { NavLink, Route, Routes, Link } from "react-router-dom";
+import { NavLink, Route, Routes, Link, useNavigate } from "react-router-dom";
 import { MOCK } from "./mockData";
-import { Badge, ButtonLink, EmptyState, Tbc } from "../../components/ui";
+import { Badge, Button, ButtonLink, EmptyState, Tbc } from "../../components/ui";
+import { useAuth } from "../../lib/auth";
 import { useSeo } from "../../lib/seo";
 import { cx } from "../../lib/format";
 
@@ -34,10 +35,15 @@ function Dashboard() {
 
 export default function Account() {
   useSeo({ title: "My account", description: "Your HIQ units, orders, filters and service bookings.", path: "/account", noindex: true });
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
   return (
     <div className="page py-10">
       <div className="mb-6 rounded-lg bg-amber-50 p-3 text-[15px] text-warning ring-1 ring-amber-200">Demo data — accounts need the backend described in /docs/API.md. Nothing here is saved.</div>
-      <h1 className="text-[32px] sm:text-[40px]">Mabuhay, {MOCK.user.name.split(" ")[0]}</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div><h1 className="text-[32px] sm:text-[40px]">Mabuhay, {user?.firstName ?? MOCK.user.name.split(" ")[0]}</h1><p className="mt-1 text-[15px] text-slate-600">{user?.email}</p></div>
+        <Button variant="ghost" onClick={() => { logout(); nav("/login"); }}>Sign out</Button>
+      </div>
       <div className="mt-8 grid gap-8 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Account" className="-mx-4 flex gap-1 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:px-0">
           {TABS.map(([to, l]) => <NavLink key={to} end to={`/account${to ? "/" + to : ""}`} className={({ isActive }) => cx("flex min-h-[44px] shrink-0 items-center rounded-lg px-3 text-[15px] font-semibold", isActive ? "bg-hiq-sky text-hiq-blue" : "hover:bg-slate-50")}>{l}</NavLink>)}

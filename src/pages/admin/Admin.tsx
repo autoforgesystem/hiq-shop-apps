@@ -35,7 +35,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
   return (
     <div className="grid min-h-[100dvh] place-items-center bg-hiq-sky px-4">
       <form onSubmit={submit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lift sm:p-8">
-        <LogoMark size={64} />
+        <LogoMark size={48} />
         <h1 className="mt-3 text-[28px]">Shop admin</h1>
         <p className="mt-2 text-[15px] text-slate-600">Sign in to manage products, photos and filters.</p>
         <div className="mt-6"><FormField label="Password" id="admin-pw" error={error}>
@@ -107,7 +107,7 @@ export default function Admin() {
     <div className="min-h-[100dvh] bg-slate-50">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-hiq-navy text-white">
         <div className="mx-auto flex min-h-[60px] max-w-[1400px] items-center justify-between gap-3 px-4 sm:px-6">
-          <Link to="/admin" className="flex items-center gap-2 font-display text-lg font-bold"><LogoMark size={36} /><span className="text-hiq-water">Shop admin</span></Link>
+          <Link to="/admin" className="flex items-center gap-2 font-display text-lg font-bold"><LogoMark size={28} /><span className="text-hiq-water">Shop admin</span></Link>
           <div className="flex items-center gap-1">
             <a href="/" target="_blank" rel="noopener" className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 text-[15px] font-semibold hover:bg-white/10">View shop<IconExternal size={16} /><span className="sr-only"> (opens in a new tab)</span></a>
             <button onClick={signOut} className="min-h-[44px] rounded-full px-3 text-[15px] font-semibold hover:bg-white/10">Sign out</button>

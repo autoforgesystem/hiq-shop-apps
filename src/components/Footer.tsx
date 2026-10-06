@@ -21,7 +21,7 @@ export function Footer() {
     <footer className="mt-16 bg-hiq-navy pb-24 text-white md:pb-0">
       <div className="page grid gap-10 py-14 md:grid-cols-[1.3fr_1fr_1fr_1.3fr]">
         <div className="space-y-4 text-[15px] text-white/85">
-          <Logo light />
+          <Logo />
           <p>{BUSINESS.legalName}</p>
           <address className="not-italic">{BUSINESS.addressLine}</address>
           <p>{BUSINESS.hours} <Tbc>CONFIRM DAYS</Tbc></p>
