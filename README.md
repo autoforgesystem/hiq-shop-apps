@@ -4,6 +4,8 @@ Mobile-first React shop for Hospitality Innovations by Quorate Inc. (HIQ Philipp
 
 **Stack:** React 18 · Vite · TypeScript · React Router · Tailwind CSS (HIQ tokens) · static JSON data. No UI or animation libraries.
 
+**Backend:** optional NestJS API in `../server` (see `server/README.md`). Set `VITE_API_URL` to use it; without it, the shop runs on mock data.
+
 ## Run it
 ```bash
 npm install
@@ -18,6 +20,7 @@ VITE_GODADDY_CART_URL=
 VITE_FORM_ENDPOINT=               # e.g. Formspree endpoint forwarding to sales@
 VITE_GTM_ID=                      # loads only after cookie consent
 VITE_ADMIN_PASSWORD=              # demo admin password (default hiq-admin), not real security
+VITE_API_URL=                     # HIQ API in ../server, e.g. http://localhost:3000/api. Empty = mock data
 ```
 
 ## Where things live
@@ -32,6 +35,7 @@ VITE_ADMIN_PASSWORD=              # demo admin password (default hiq-admin), not
 | `src/commerce/` | `CommerceAdapter`, `MockAdapter`, `GoDaddyLinkAdapter` |
 | `src/lib/analytics.ts` | `dataLayer` events + consent-gated GTM |
 | `src/pages/auth/`, `src/lib/auth.tsx` | Customer sign-in & registration (demo only, browser storage). Demo login `juan@example.com` / `demo1234` |
+| `src/lib/api.ts`, `src/data/ApiCatalogRepository.ts` | Connection to the HIQ API (`../server`) when `VITE_API_URL` is set, see `docs/API.md` |
 | `src/pages/admin/`, `src/data/catalogStore.ts` | Shop admin at `/admin` (demo password `hiq-admin`), see `docs/ADMIN.md` |
 | `content/PLACEHOLDERS.md` | Everything HIQ still needs to supply |
 | `docs/` | Commerce, API contract, assumptions |

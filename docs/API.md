@@ -1,22 +1,47 @@
-# API contract (Phase 3+ backend)
+# API
 
-Phase 1 is front-end only. Account screens render **demo data** from `src/pages/account/mockData.ts` and persist nothing. A backend should expose the following (JSON, authenticated with a session cookie or bearer token). Amounts in centavos, dates ISO 8601, currency PHP.
+The backend lives in `../server` (NestJS + Prisma + Postgres). Setup and the full route list are in `server/README.md`, and live docs are at `/api/docs` on a running server.
 
-| Method & path | Purpose | Response (shape) |
+## Connecting the shop
+
+Set `VITE_API_URL` (e.g. `http://localhost:3000/api`) and restart the dev server. When it's empty, the shop runs exactly as before, on mock data and browser storage, and makes no API calls.
+
+| Front-end piece | With `VITE_API_URL` | Without it |
 |---|---|---|
-| `POST /auth/otp` · `POST /auth/verify` | Mobile/email one-time-code sign-in | `{ token }` |
-| `GET /me` | Profile | `{ id, name, email, phone }` |
-| `GET /me/units` | **My Units** (top priority) | `[{ id, productSlug, model, configuration, installedAt, address, nextFilterDueAt, warranty: { endsAt, status }, serviceHistory: [{ date, type, notes }] }]` |
-| `GET /me/orders` · `GET /orders/:id` | Orders | `[{ id, createdAt, lines, total, status }]` |
-| `GET /me/filters/due` | Filter replacements, due-soon badges | `[{ unitId, filterSku, stage, dueAt }]` |
-| `GET/POST/DELETE /me/subscriptions` | Subscribe & Save `[CONFIRM OFFER]` | `[{ id, unitId, filterSkus, intervalMonths, nextShipAt, status }]` |
-| `GET /me/bookings` · `POST /bookings` | Service bookings (form at `/service/book`) | `{ id, service, unitId \| "new", preferredDate, preferredSlot, address, status: "requested" \| "confirmed" \| "done" }` |
-| `POST /warranty-claims` | Warranty claim | `{ id, status }` |
-| `GET/POST/PUT/DELETE /me/addresses` | Addresses | `[{ id, label, line1, city, province, postal }]` |
-| `GET /me/loyalty` | Loyalty `[CONFIRM PROGRAMME]` | `{ points, history }` |
-| `POST /leads` | Quote, rental, contact, newsletter forms (currently `VITE_FORM_ENDPOINT` → sales@) | `{ id }` |
-| `POST /service-area/check` | Service-area check `[TBC]` | `{ covered: boolean, note }` |
+| Sign in / register (`src/lib/auth.tsx`) | `/auth/login`, `/auth/register`; token in localStorage ("Keep me signed in") or sessionStorage | Demo accounts in this browser |
+| Catalogue (`src/data/ApiCatalogRepository.ts`) | `GET /catalog`; the admin uses `/admin/*` | `MockCatalogRepository` (IndexedDB) |
+| Account pages (`src/pages/account/useAccountData.ts`) | `/me/units`, `/me/orders`, `/me/bookings`, `/me/addresses` | `mockData.ts` |
+| Checkout (`src/pages/Checkout.tsx`) | `POST /orders`, priced by the server | Local order number |
+| Service booking (`src/pages/ServiceBook.tsx`) | `POST /bookings`, linked to the customer's unit | `submitForm` (email) |
+| Quote, rental, contact and newsletter forms (`src/lib/forms.ts`) | `POST /leads` | `VITE_FORM_ENDPOINT` or mailto |
+| Admin sign-in (`src/pages/admin/Admin.tsx`) | Email and password of an admin account | Demo password |
 
-Filter reminders: a scheduled job reads `nextFilterDueAt` per unit and sends SMS/email 30 days and 7 days before; the account UI already shows the badges.
+All API calls go through `src/lib/api.ts`, which adds the token and turns server errors into readable messages.
 
-Payment methods are never stored by this app; they belong to the commerce platform.
+## Conventions
+
+- Prices are in **pesos** in requests and responses, the same as `Product.price` in the front-end. The database stores centavos. `null` means **[TBC]**.
+- Dates are ISO 8601 (`YYYY-MM-DD` for date-only fields). The currency is PHP.
+- Signed-in requests send `Authorization: Bearer <token>`.
+- Errors return `{ statusCode, message }`, where `message` is a sentence or a list of validation messages.
+- Payment methods are never stored by this app; they belong to the commerce platform.
+
+## Main customer routes
+
+| Method & path | Purpose |
+|---|---|
+| `POST /auth/register` · `POST /auth/login` | Email and password sign-in → `{ token, customer }` |
+| `POST /auth/otp` · `POST /auth/verify` | One-time code by email or SMS → `{ token, customer }` |
+| `GET /me` | Profile `{ id, firstName, lastName, name, email, phone }` |
+| `GET /me/units` | **My Units**: `[{ id, productSlug, model, configuration, installedAt, address, nextFilterDueAt, warranty: { endsAt, status }, serviceHistory: [{ date, type, notes }] }]` |
+| `GET /me/orders` · `GET /orders/:id` | Orders `[{ id, createdAt, lines, subtotal, total, requiresQuote, status }]` |
+| `GET /me/filters/due` | `[{ unitId, filterSku, stage, dueAt, daysLeft }]` |
+| `GET/POST/DELETE /me/subscriptions` | Subscribe & Save `[CONFIRM OFFER]`, off until `SUBSCRIPTIONS_ENABLED=true` |
+| `GET /me/bookings` · `POST /bookings` | `{ id, service, unitId \| "new", preferredDate, preferredSlot, address, status: "requested" \| "confirmed" \| "done" \| "cancelled" }` |
+| `POST /warranty-claims` | `{ id, status }` |
+| `GET/POST/PUT/DELETE /me/addresses` | `[{ id, label, line1, line2, city, province, postal, isDefault }]` |
+| `GET /me/loyalty` | `{ points, history }` `[CONFIRM PROGRAMME]` |
+| `POST /leads` | Quote, rental, contact and newsletter forms → `{ id }` |
+| `POST /service-area/check` | `{ covered: true \| false \| null, note }`, where `null` means areas are `[TBC]` |
+
+Filter reminders: a daily job sends an SMS and email 30 days and 7 days before a unit's filters are due. The account UI shows the same due dates as badges.

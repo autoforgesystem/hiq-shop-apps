@@ -1,6 +1,6 @@
-# Database design (Phase 3+ backend)
+# Database design
 
-Proposed Postgres schema for the backend in [API.md](API.md) and the admin in [ADMIN.md](ADMIN.md). Nothing uses it yet: Phase 1 runs on mock data and browser storage.
+Postgres schema used by the HIQ Shop API in `../server` (source of truth: `server/prisma/schema.prisma`). The front-end uses it when `VITE_API_URL` is set; otherwise it runs on mock data and browser storage. See [API.md](API.md) and [ADMIN.md](ADMIN.md).
 
 Conventions: every table has `id uuid` as its primary key; money is `int` centavos (PHP); dates are ISO 8601; `null` in a price, interval or spec means **[TBC]**, as on the site. Card and payment details are never stored, they stay on the commerce platform.
 
@@ -70,6 +70,7 @@ erDiagram
         varchar channel "sms or email"
         varchar destination
         varchar code_hash
+        int attempts "max 5 wrong codes"
         timestamp expires_at
         timestamp used_at
         timestamp created_at
@@ -102,10 +103,15 @@ erDiagram
         boolean hot_cold
         varchar install
         int tds_limit
+        boolean is_entry
+        boolean is_bottleless
+        boolean is_table_top
+        boolean is_office
         text summary
         jsonb highlights
         int price_centavos "null = TBC"
         int warranty_months "null = TBC"
+        boolean warranty_tbc "shows the WARRANTY TBC tag"
         varchar store_url
         int featured_rank
         boolean is_hidden
@@ -152,15 +158,17 @@ erDiagram
     PRODUCT_CONFIGURATIONS {
         uuid product_id PK, FK
         uuid configuration_id PK, FK
+        int sort_order
     }
     FILTER_SKUS {
         uuid id PK
-        varchar sku UK
+        varchar sku "make unique once SKUs are confirmed"
         varchar name
         varchar stage
         int interval_months "null = TBC"
         int price_centavos "null = TBC"
         text note
+        int sort_order
         timestamp created_at
         timestamp updated_at
     }
@@ -203,6 +211,7 @@ erDiagram
         int subtotal_centavos
         int delivery_fee_centavos "null = TBC"
         int total_centavos
+        boolean requires_quote "a line has no confirmed price"
         varchar payment_method "card, gcash, maya, online_banking"
         varchar platform_order_ref
         date install_preferred_date
@@ -215,6 +224,7 @@ erDiagram
         uuid order_id FK
         uuid product_id FK "null if filter line"
         uuid filter_sku_id FK "null if product line"
+        varchar name "snapshot"
         varchar mode "buy or rent"
         varchar configuration
         boolean with_installation
@@ -267,7 +277,7 @@ erDiagram
     SERVICE_HISTORY {
         uuid id PK
         uuid unit_id FK
-        uuid booking_id FK "null if not booked online"
+        uuid booking_id FK, UK "null if not booked online"
         date service_date
         varchar service_type
         text notes
@@ -281,10 +291,11 @@ erDiagram
         uuid address_id FK "null = guest"
         varchar contact_name
         varchar contact_phone
+        varchar contact_email
         text visit_address "snapshot"
-        varchar service "installation, filter_replacement, maintenance, warranty, water_test"
+        varchar service "installation, water-test, maintenance, filter-replacement, warranty, troubleshooting, general"
         date preferred_date
-        varchar preferred_slot "morning or afternoon"
+        varchar preferred_slot "morning, afternoon, late-afternoon"
         text notes
         varchar status "requested, confirmed, done, cancelled"
         timestamp created_at
@@ -302,7 +313,7 @@ erDiagram
     FILTER_REMINDERS {
         uuid id PK
         uuid unit_id FK
-        uuid filter_sku_id FK
+        uuid filter_sku_id FK "null = all filters on the unit"
         date due_at
         timestamp sent_30d_at
         timestamp sent_7d_at
@@ -352,6 +363,7 @@ erDiagram
         varchar company
         text message
         uuid product_id FK "null if general"
+        jsonb details "other form fields"
         varchar utm_source
         varchar utm_medium
         varchar utm_campaign
