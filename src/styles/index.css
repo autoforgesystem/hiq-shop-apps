@@ -1,0 +1,50 @@
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --hiq-blue: #0E71B8;
+  --hiq-navy: #0B2A4A;
+  --hiq-sky: #EAF5FC;
+  --hiq-water: #CFE8F7;
+  --hiq-accent: #C2410C;
+  --hiq-white: #FFFFFF;
+  --success: #15803D;
+  --warning: #B45309;
+  --error: #B91C1C;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 88px; }
+  body { font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.5; }
+  h1, h2, h3, h4 { font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: var(--hiq-navy); letter-spacing: -0.015em; }
+  h1 { font-weight: 700; line-height: 1.1; }
+  h2, h3 { font-weight: 700; line-height: 1.2; }
+  :focus-visible { outline: 2px solid var(--hiq-blue); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--hiq-water); }
+}
+
+@layer components {
+  .page { @apply mx-auto w-full max-w-page px-4 sm:px-6; }
+  .section { @apply py-12 sm:py-16; }
+  .prose-hiq p { @apply mb-4 max-w-[68ch] text-[17px] leading-relaxed text-hiq-navy/90; }
+  .prose-hiq h2 { @apply mb-3 mt-10 text-2xl; }
+  .prose-hiq h3 { @apply mb-2 mt-6 text-lg; }
+  .prose-hiq ul { @apply mb-4 ml-5 max-w-[68ch] list-disc space-y-1 text-[17px]; }
+  .link { @apply font-medium text-hiq-blue underline decoration-hiq-blue/30 underline-offset-4 hover:decoration-hiq-blue; }
+  .tbc { @apply rounded bg-amber-50 px-1.5 py-0.5 text-[14px] font-semibold text-warning ring-1 ring-amber-200; }
+  .field { @apply min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-hiq-navy placeholder:text-slate-500 focus:border-hiq-blue focus:outline-none focus:ring-2 focus:ring-hiq-blue/30; }
+}
+
+/* Signature motif: the TDS water line (UF → Nano → RO) */
+.waterline { background: linear-gradient(90deg, #CFE8F7 0%, #7DBCE5 50%, #0E71B8 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
