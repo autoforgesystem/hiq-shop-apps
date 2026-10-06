@@ -1,0 +1,4 @@
+# Environment files can hold passwords and machine-specific URLs
+.env
+.env.local
+.env.*.local
