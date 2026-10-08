@@ -5,7 +5,7 @@ import { IconMinus, IconPlus, IconFilter } from "../components/Icons";
 import { useSeo } from "../lib/seo";
 import { track } from "../lib/analytics";
 import { formatPHP } from "../lib/format";
-import { getProduct, filtersFor } from "../data/catalog";
+import { getProduct, filtersFor, partFromSku, PART_UNIT_LABEL } from "../data/catalog";
 
 export default function Cart() {
   const { lines, setQty, remove, adapter } = useCommerce();
@@ -19,10 +19,12 @@ export default function Cart() {
       <h1 className="text-[34px]">Your cart</h1>
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
         <ul className="divide-y divide-slate-200 rounded-card ring-1 ring-slate-200">
-          {lines.map((l) => (
+          {lines.map((l) => { const part = partFromSku(l.sku); return (
             <li key={l.id} className="flex flex-wrap items-center gap-4 p-4">
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{getProduct(l.sku) ? <Link to={`/product/${l.sku}`} className="hover:text-hiq-blue">{l.name}</Link> : l.name}</p>
+                <p className="font-semibold">{getProduct(l.sku) ? <Link to={`/product/${l.sku}`} className="hover:text-hiq-blue">{l.name}</Link>
+                  : part ? <Link to={`/parts/${part.slug}`} className="hover:text-hiq-blue">{l.name}</Link> : l.name}</p>
+                {part && part.unit !== "piece" && <p className="text-sm text-slate-600">Quantity in {part.unit === "meter" ? "meters" : "packs"} · price {PART_UNIT_LABEL[part.unit]}</p>}
                 {l.options && <p className="text-sm text-slate-600">{Object.entries(l.options).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>}
                 {l.options?.installation === "Yes" && <p className="text-sm text-slate-600">Installation add-on: <span className="tbc">[TBC]</span></p>}
               </div>
@@ -34,7 +36,7 @@ export default function Cart() {
               <div className="w-28 text-right"><PriceTag price={l.unitPrice} /></div>
               <button onClick={() => remove(l.id)} className="min-h-[44px] text-sm text-slate-600 underline">Remove</button>
             </li>
-          ))}
+          ); })}
         </ul>
         <aside className="h-fit space-y-4 rounded-card bg-hiq-sky p-5 lg:sticky lg:top-24">
           <dl className="space-y-2 text-[15px]">

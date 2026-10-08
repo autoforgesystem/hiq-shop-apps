@@ -9,8 +9,8 @@ const ITEMS = [
   { to: "/filters", label: "Filters", Icon: IconFilter },
   { to: "/account", label: "Account", Icon: IconUser },
 ];
-/** Browsing pages only — hidden on product pages (sticky Add to Cart) and throughout checkout. */
-export const hideBottomNav = (path: string) => /^\/(product|cart|checkout|order)/.test(path);
+/** Browsing pages only — hidden on product and part pages (sticky Add to Cart) and throughout checkout. */
+export const hideBottomNav = (path: string) => /^\/(product|cart|checkout|order|parts\/.)/.test(path);
 
 export function MobileBottomNav() {
   const { pathname } = useLocation();

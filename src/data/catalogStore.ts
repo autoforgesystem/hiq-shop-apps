@@ -1,23 +1,24 @@
 import { useSyncExternalStore } from "react";
-import { applyCatalog, SEED_FILTERS, SEED_PRODUCTS } from "./catalog";
+import { applyCatalog, SEED_FILTERS, SEED_PARTS, SEED_PRODUCTS } from "./catalog";
 import { PHOTO_DEFAULTS, PHOTOS, type PhotoKey } from "./images";
 import { MockCatalogRepository } from "./MockCatalogRepository";
 import { ApiCatalogRepository } from "./ApiCatalogRepository";
 import { useApi } from "../lib/api";
-import type { CatalogData, CatalogRepository, SitePhotos } from "./repository";
-import type { FilterSku, Product } from "./types";
+import type { CatalogData, CatalogImport, CatalogRepository, SitePhotos } from "./repository";
+import type { FilterSku, Product, SparePart } from "./types";
 
 /** The HIQ API when VITE_API_URL is set, otherwise the browser-only mock (see docs/ADMIN.md). */
 export const repository: CatalogRepository = useApi ? new ApiCatalogRepository() : new MockCatalogRepository();
 
-let data: CatalogData = { products: SEED_PRODUCTS, filters: SEED_FILTERS, photos: {} };
+let data: CatalogData = { products: SEED_PRODUCTS, filters: SEED_FILTERS, parts: SEED_PARTS, photos: {} };
 let version = 0;
 const listeners = new Set<() => void>();
 const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("hiq-catalog") : null;
 
-function apply(next: CatalogData) {
+function apply(loaded: CatalogData) {
+  const next = { ...loaded, parts: loaded.parts ?? [] }; // an API from before spare parts sends none
   data = next;
-  applyCatalog(next.products, next.filters);
+  applyCatalog(next.products, next.filters, next.parts);
   for (const k of Object.keys(PHOTO_DEFAULTS) as PhotoKey[]) {
     const o = next.photos[k];
     // An admin upload replaces the built-in photo; otherwise keep the default (and its responsive sizes).
@@ -48,9 +49,11 @@ export const catalogAdmin = {
   deleteProduct: (slug: string) => mutate(() => repository.deleteProduct(slug)),
   saveFilter: (f: FilterSku) => mutate(() => repository.saveFilter(f)),
   deleteFilter: (id: string) => mutate(() => repository.deleteFilter(id)),
+  savePart: (p: SparePart, previousSlug?: string) => mutate(() => repository.savePart(p, previousSlug)),
+  deletePart: (slug: string) => mutate(() => repository.deletePart(slug)),
   savePhoto: (key: PhotoKey, photo: SitePhotos[PhotoKey] | null) => mutate(() => repository.savePhoto(key, photo)),
   uploadImage: (file: File) => repository.uploadImage(file),
-  replaceAll: (d: CatalogData) => mutate(() => repository.replaceAll(d)),
+  replaceAll: (d: CatalogImport) => mutate(() => repository.replaceAll(d)),
   reset: () => mutate(() => repository.reset()),
 };
 

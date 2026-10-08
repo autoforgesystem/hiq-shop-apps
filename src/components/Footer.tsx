@@ -7,7 +7,7 @@ import { track } from "../lib/analytics";
 import { submitForm } from "../lib/forms";
 
 const SHOP_LINKS = [
-  ["/shop", "All products"], ["/find-my-system", "Find My System"], ["/filters", "Replacement filters"], ["/service", "Installation & service"],
+  ["/shop", "All products"], ["/find-my-system", "Find My System"], ["/filters", "Replacement filters"], ["/parts", "Spare parts"], ["/service", "Installation & service"],
   ["/rent", "Buy or rent"], ["/business", "Office & business"], ["/eco", "Break the habit"], ["/guide", "Water Quality Guide"], ["/help", "Help & FAQ"],
 ] as const;
 const MAIN_LINKS = [

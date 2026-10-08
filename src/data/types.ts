@@ -44,3 +44,30 @@ export interface FilterSku {
   price: number | null; // [TBC]
   note?: string;
 }
+
+export type PartCategory = "fittings" | "hoses-tubing" | "filter-cartridges" | "faucets" | "valves" | "housings" | "other";
+/** What the price and quantity count: one piece, one meter of tubing, or one pack. */
+export type PartUnit = "piece" | "meter" | "pack";
+
+/**
+ * Fittings, hoses, general-purpose cartridges and other parts. Each size is its own part with its own SKU.
+ * Filters made for one HIQ model are `FilterSku`s instead (they drive filter reminders).
+ */
+export interface SparePart {
+  /** Never changes after creation: links and cart lines use it. */
+  slug: string;
+  sku: string; // [PART SKU TBC]
+  name: string;
+  category: PartCategory;
+  description: string;
+  /** null = not yet supplied, rendered as [TBC] */
+  specs: Record<string, string | null>;
+  /** First one is the main photo. Empty = labelled placeholder frame. */
+  images: ProductImage[];
+  unit: PartUnit;
+  /** Per unit. null = [PRICE TBC] */
+  price: number | null;
+  /** Product slugs. Empty = fits any system. */
+  compatibleModels: string[];
+  hidden?: boolean;
+}

@@ -1,6 +1,6 @@
 import { api, tokens } from "../lib/api";
-import type { CatalogData, CatalogRepository, SitePhotos } from "./repository";
-import type { FilterSku, Product } from "./types";
+import type { CatalogData, CatalogImport, CatalogRepository, SitePhotos } from "./repository";
+import type { FilterSku, Product, SparePart } from "./types";
 import type { PhotoKey } from "./images";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -38,6 +38,15 @@ export class ApiCatalogRepository implements CatalogRepository {
     await api(`/admin/filters/${id}`, { method: "DELETE", auth: "admin" });
   }
 
+  async savePart(p: SparePart, previousSlug?: string) {
+    if (previousSlug) await api(`/admin/parts/${encodeURIComponent(previousSlug)}`, { method: "PUT", body: p, auth: "admin" });
+    else await api("/admin/parts", { body: p, auth: "admin" });
+  }
+
+  async deletePart(slug: string) {
+    await api(`/admin/parts/${encodeURIComponent(slug)}`, { method: "DELETE", auth: "admin" });
+  }
+
   async savePhoto(key: PhotoKey, photo: SitePhotos[PhotoKey] | null) {
     if (photo) await api(`/admin/photos/${key}`, { method: "PUT", body: { src: photo.src ?? null, alt: photo.alt }, auth: "admin" });
     else await api(`/admin/photos/${key}`, { method: "DELETE", auth: "admin" });
@@ -49,7 +58,7 @@ export class ApiCatalogRepository implements CatalogRepository {
     return (await api<{ url: string }>("/admin/uploads", { form, auth: "admin" })).url;
   }
 
-  async replaceAll(data: CatalogData) {
+  async replaceAll(data: CatalogImport) {
     await api("/admin/catalog", { method: "PUT", body: data, auth: "admin" });
   }
 

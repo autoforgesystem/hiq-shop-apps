@@ -4,7 +4,7 @@ import { Button, ButtonLink, EmptyState, FormField, Input, Select, Textarea } fr
 import { useToast } from "../../components/Toast";
 import { catalogAdmin, useCatalog } from "../../data/catalogStore";
 import { cx } from "../../lib/format";
-import { Card, CheckGroup, ConfirmDialog, ListEditor, PageHeader, PhotoDrop, SpecEditor, Toggle } from "./adminUi";
+import { Card, CheckGroup, ConfirmDialog, ListEditor, PageHeader, PhotoList, SpecEditor, Toggle } from "./adminUi";
 import {
   CATEGORY_OPTIONS, FILTRATION_OPTIONS, INSTALL_SUGGESTIONS, NEED_OPTIONS, emptyForm, slugify, toForm, toProduct, validate,
   type FormErrors, type ProductForm,
@@ -65,7 +65,6 @@ function ProductEditor({ slug }: { slug?: string }) {
   };
 
   const leave = () => (dirty ? setDiscard(true) : nav("/admin/products"));
-  const moveImage = (i: number, to: number) => { const imgs = [...form.images]; const [m] = imgs.splice(i, 1); imgs.splice(to, 0, m); set({ images: imgs }); };
   const quote = form.channel === "quote";
   const errorList = Object.entries(errors);
 
@@ -117,32 +116,8 @@ function ProductEditor({ slug }: { slug?: string }) {
           </Card>
 
           <Card title="Photos" intro="The first photo is the main one, shown on product cards. Square photos with a plain background look best.">
-            {form.images.length > 0 && (
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {form.images.map((img, i) => (
-                  <li key={i} className={cx("rounded-card p-3 ring-1", i === 0 ? "ring-2 ring-hiq-blue" : "ring-slate-200")}>
-                    <div className="relative">
-                      <img src={img.src} alt="" className="aspect-square w-full rounded-lg bg-slate-100 object-cover" />
-                      {i === 0 && <span className="absolute left-2 top-2 rounded-md bg-hiq-blue px-2 py-0.5 text-sm font-semibold text-white">Main photo</span>}
-                    </div>
-                    <label htmlFor={`img-alt-${i}`} className="mt-3 block text-sm font-semibold">Describe this photo</label>
-                    <Input id={`img-alt-${i}`} value={img.alt} placeholder={`e.g. ${form.model || "The unit"} installed under a kitchen sink`}
-                      onChange={(e) => set({ images: form.images.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)) })} className="mt-1" aria-invalid={!!errors.images && !img.alt.trim()} />
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {i > 0 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => moveImage(i, 0)}>Make main photo</Button>}
-                      {i > 0 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => moveImage(i, i - 1)} aria-label={`Move photo ${i + 1} earlier`}>← Earlier</Button>}
-                      {i < form.images.length - 1 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => moveImage(i, i + 1)} aria-label={`Move photo ${i + 1} later`}>Later →</Button>}
-                      <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm text-error hover:bg-red-50" onClick={() => set({ images: form.images.filter((_, j) => j !== i) })}>Remove</Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div id="pf-images" tabIndex={-1}>
-              <PhotoDrop multiple label={form.images.length ? "Add more photos" : "Add photos"}
-                onUploaded={(urls) => set({ images: [...form.images, ...urls.map((src) => ({ src, alt: `${form.model || "Product"} water filtration system` }))] })} />
-            </div>
-            {errors.images && <p role="alert" className="text-sm font-medium text-error">{errors.images}</p>}
+            <PhotoList id="pf-images" images={form.images} onChange={(images) => set({ images })} error={errors.images}
+              defaultAlt={`${form.model || "Product"} water filtration system`} altPlaceholder={`e.g. ${form.model || "The unit"} installed under a kitchen sink`} />
           </Card>
 
           <Card title="Description">

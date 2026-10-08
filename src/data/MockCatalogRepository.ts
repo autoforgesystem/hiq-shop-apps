@@ -1,6 +1,6 @@
-import { SEED_FILTERS, SEED_PRODUCTS } from "./catalog";
-import type { CatalogData, CatalogRepository, SitePhotos } from "./repository";
-import type { FilterSku, Product } from "./types";
+import { SEED_FILTERS, SEED_PARTS, SEED_PRODUCTS } from "./catalog";
+import type { CatalogData, CatalogImport, CatalogRepository, SitePhotos } from "./repository";
+import type { FilterSku, Product, SparePart } from "./types";
 import type { PhotoKey } from "./images";
 
 const DB_NAME = "hiq-admin", STORE = "kv", KEY = "catalog", VERSION = 1;
@@ -20,7 +20,7 @@ function idb<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<
   });
 }
 
-const seed = (): CatalogData => structuredClone({ products: SEED_PRODUCTS, filters: SEED_FILTERS, photos: {} });
+const seed = (): CatalogData => structuredClone({ products: SEED_PRODUCTS, filters: SEED_FILTERS, parts: SEED_PARTS, photos: {} });
 
 /** Shrinks photos to a web-friendly size so the browser database stays small. */
 async function compressImage(file: File, maxSide = 1600): Promise<string> {
@@ -48,6 +48,8 @@ export class MockCatalogRepository implements CatalogRepository {
     try {
       const stored = await idb<{ version: number; data: CatalogData } | undefined>("readonly", (s) => s.get(KEY));
       this.data = stored?.version === VERSION ? stored.data : seed();
+      // Saved before spare parts existed: keep the admin's changes and add the example parts.
+      this.data.parts ??= structuredClone(SEED_PARTS);
     } catch {
       this.data = seed(); // private mode or storage blocked: work in memory for this visit
     }
@@ -73,6 +75,7 @@ export class MockCatalogRepository implements CatalogRepository {
     const d = this.draft();
     d.products = d.products.filter((p) => p.slug !== slug);
     d.filters = d.filters.map((f) => ({ ...f, compatibleModels: f.compatibleModels.filter((s) => s !== slug) }));
+    d.parts = d.parts.map((p) => ({ ...p, compatibleModels: p.compatibleModels.filter((s) => s !== slug) }));
     await this.persist(d);
   }
 
@@ -89,6 +92,21 @@ export class MockCatalogRepository implements CatalogRepository {
     await this.persist(d);
   }
 
+  async savePart(p: SparePart, previousSlug?: string) {
+    const d = this.draft();
+    const i = d.parts.findIndex((x) => x.slug === (previousSlug ?? p.slug));
+    if (previousSlug == null && i >= 0) throw new Error(`Another spare part already uses the web address "${p.slug}".`);
+    if (previousSlug != null && i < 0) throw new Error("This spare part no longer exists. It may have been deleted in another tab.");
+    if (i >= 0) d.parts[i] = p; else d.parts.push(p);
+    await this.persist(d);
+  }
+
+  async deletePart(slug: string) {
+    const d = this.draft();
+    d.parts = d.parts.filter((p) => p.slug !== slug);
+    await this.persist(d);
+  }
+
   async savePhoto(key: PhotoKey, photo: SitePhotos[PhotoKey] | null) {
     const d = this.draft();
     if (photo) d.photos[key] = photo; else delete d.photos[key];
@@ -101,6 +119,7 @@ export class MockCatalogRepository implements CatalogRepository {
     try { return await compressImage(file); } catch { throw new Error("This photo couldn't be read. Try saving it as JPG or PNG first."); }
   }
 
-  async replaceAll(data: CatalogData) { await this.persist(structuredClone(data)); }
+  /** A backup from before spare parts existed keeps the parts already here, like the API does. */
+  async replaceAll(data: CatalogImport) { await this.persist(structuredClone({ ...data, parts: data.parts ?? this.data.parts })); }
   async reset() { await this.persist(seed()); }
 }

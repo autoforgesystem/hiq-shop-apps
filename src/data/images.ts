@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, SparePart } from "./types";
 
 /**
  * Photography slots. Every slot renders as a labelled placeholder frame until `src` is set.
@@ -43,4 +43,10 @@ export const productPhoto = (p: Product, i = 0): PhotoSlot => {
   const img = p.images?.[i];
   return img ? { label: `${p.model} photo ${i + 1}`, src: img.src, alt: img.alt || `${p.model} water filtration system` }
     : { label: `${p.model} product photo`, alt: `${p.model} water filtration system` };
+};
+
+/** Spare part photography, same rules as productPhoto. */
+export const partPhoto = (p: SparePart, i = 0): PhotoSlot => {
+  const img = p.images[i];
+  return img ? { label: `${p.name} photo ${i + 1}`, src: img.src, alt: img.alt || p.name } : { label: p.name, alt: p.name };
 };

@@ -1,5 +1,6 @@
 import raw from "./products.json";
-import type { Category, FilterSku, Need, Product } from "./types";
+import rawParts from "./parts.json";
+import type { Category, FilterSku, Need, PartCategory, PartUnit, Product, SparePart } from "./types";
 
 /** Original catalogue shipped with the site. The admin starts from this and can reset back to it. */
 export const SEED_PRODUCTS = raw as unknown as Product[];
@@ -62,11 +63,38 @@ export let filters: FilterSku[] = SEED_FILTERS;
 
 export const filtersFor = (slug: string) => filters.filter((f) => f.compatibleModels.includes(slug));
 
+/** Shown as [SKU TBC] until HIQ confirms the part's code. */
+export const TBC_PART_SKU = "[PART SKU TBC]";
+/** Example spare parts. SKUs, prices and some specs are placeholders. Kept in step with server/prisma/seed-data/parts.json. */
+export const SEED_PARTS = rawParts as unknown as SparePart[];
+/** Visible spare parts (hidden ones are left out, like products). */
+export let parts: SparePart[] = SEED_PARTS;
+export const getPart = (slug: string) => parts.find((p) => p.slug === slug);
+/** Parts listed as fitting this model. Universal parts (no models listed) are not included. */
+export const partsFor = (slug: string) => parts.filter((p) => p.compatibleModels.includes(slug));
+
+export const PART_CATEGORIES: { slug: PartCategory; label: string; intro: string }[] = [
+  { slug: "fittings", label: "Fittings", intro: "Push-fit connectors, elbows, tees and adapters. Each size is listed separately, so check your tube size first." },
+  { slug: "hoses-tubing", label: "Hoses & tubing", intro: "Drinking-water tubing sold by the meter or by the roll, and braided inlet hoses." },
+  { slug: "filter-cartridges", label: "Filter cartridges", intro: "General-purpose cartridges in standard sizes, including reseller packs. For filters made for your HIQ unit, use Find my filters." },
+  { slug: "faucets", label: "Faucets", intro: "Dedicated faucets for filtered drinking water." },
+  { slug: "valves", label: "Valves", intro: "Feed, shut-off, ball and check valves for filter lines." },
+  { slug: "housings", label: "Housings", intro: "Standard filter housings, wrenches and O-rings." },
+  { slug: "other", label: "Other parts", intro: "Brackets, thread tape and other installation parts." },
+];
+export const partCategoryLabel = (c: string) => PART_CATEGORIES.find((x) => x.slug === c)?.label ?? c;
+/** "per meter" etc., shown next to a part's price. */
+export const PART_UNIT_LABEL: Record<PartUnit, string> = { piece: "each", meter: "per meter", pack: "per pack" };
+/** Cart lines for parts use "part:<slug>", so they can't clash with product slugs. */
+export const partSku = (slug: string) => `part:${slug}`;
+export const partFromSku = (sku: string) => (sku.startsWith("part:") ? getPart(sku.slice(5)) : undefined);
+
 /** Called by the catalog store; swaps the live catalogue the storefront reads from. */
-export function applyCatalog(allProducts: Product[], allFilters: FilterSku[]) {
+export function applyCatalog(allProducts: Product[], allFilters: FilterSku[], allParts: SparePart[]) {
   products = allProducts.filter((p) => !p.hidden);
   shopProducts = products.filter((p) => p.channel === "shop");
   quoteProducts = products.filter((p) => p.channel === "quote");
   const visible = new Set(products.map((p) => p.slug));
   filters = allFilters.filter((f) => f.compatibleModels.some((s) => visible.has(s)));
+  parts = allParts.filter((p) => !p.hidden);
 }

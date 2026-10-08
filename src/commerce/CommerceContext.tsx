@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { CartLine, CommerceAdapter } from "./adapter";
 import { MockAdapter } from "./MockAdapter";
 import { GoDaddyLinkAdapter } from "./GoDaddyLinkAdapter";
-import { filters, getProduct } from "../data/catalog";
+import { filters, getProduct, partFromSku } from "../data/catalog";
 import { track } from "../lib/analytics";
 import { useToast } from "../components/Toast";
 
@@ -21,6 +21,8 @@ const CommerceCtx = createContext<Ctx | null>(null);
 export const resolveSku = (sku: string) => {
   const p = getProduct(sku);
   if (p) return { name: p.model, price: p.price, storeUrl: p.storeUrl };
+  const part = partFromSku(sku);
+  if (part) return { name: part.name, price: part.price, storeUrl: null as string | null };
   const f = filters.find((x) => x.id === sku);
   return { name: f ? f.name : sku, price: f?.price ?? null, storeUrl: null as string | null };
 };

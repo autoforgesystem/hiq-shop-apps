@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { categoryLabel, filtersFor, getProduct, products } from "../data/catalog";
+import { categoryLabel, filtersFor, getProduct, partsFor, products } from "../data/catalog";
 import { productPhoto } from "../data/images";
 import { Gallery } from "../components/Gallery";
 import { Badge, Breadcrumbs, Button, ButtonLink, EmptyState, FiltrationChip, PriceTag, Tbc } from "../components/ui";
@@ -9,6 +9,7 @@ import { WaterTestNotice } from "../components/WaterTestNotice";
 import { SpecTable } from "../components/SpecTable";
 import { FAQAccordion, faqLd } from "../components/FAQAccordion";
 import { ProductCard } from "../components/ProductCard";
+import { PartCard } from "../components/PartCard";
 import { StickyAddToCart } from "../components/StickyAddToCart";
 import { useCommerce } from "../commerce/CommerceContext";
 import { IconCheck, IconWrench } from "../components/Icons";
@@ -56,6 +57,7 @@ export default function ProductPage() {
   const quote = p.channel === "quote";
   const tdsApplies = p.tdsLimit && /UF|Nano/.test(config);
   const pf = filtersFor(p.slug);
+  const spareParts = partsFor(p.slug);
   const related = products.filter((x) => x.slug !== p.slug && x.channel === "shop" && (x.category === p.category || x.needs.some((n) => p.needs.includes(n)))).slice(0, 3);
   const guide = ARTICLES.filter((a) => a.published && a.related.includes(p.slug)).slice(0, 2);
   const cta = () => {
@@ -136,6 +138,12 @@ export default function ProductPage() {
                 <li key={f.name} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"><span><span className="font-semibold">{f.stage}</span><span className="block text-sm text-slate-600">{f.sku}</span></span><span className="text-sm">Every <span className="tbc">[TBC]</span> months</span></li>
               ))}</ul>
               <Link to={`/filters?model=${p.slug}`} className="link mt-3 inline-block">Shop filters for the {p.model}</Link>
+            </section>
+          )}
+          {spareParts.length > 0 && (
+            <section><h2 className="mb-4 text-2xl">Spare parts for the {p.model}</h2>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">{spareParts.slice(0, 6).map((sp) => <li key={sp.slug}><PartCard p={sp} /></li>)}</ul>
+              <Link to={`/parts?model=${p.slug}`} className="link mt-3 inline-block">All spare parts for the {p.model}</Link>
             </section>
           )}
           <section><h2 className="mb-3 text-2xl">Warranty</h2><p className="text-[17px] text-slate-700">Warranty period: <Tbc>WARRANTY TBC</Tbc>. <Link to="/warranty-policy" className="link">Warranty policy</Link></p></section>

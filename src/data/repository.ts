@@ -1,4 +1,4 @@
-import type { FilterSku, Product } from "./types";
+import type { FilterSku, Product, SparePart } from "./types";
 import type { PhotoKey, PhotoSlot } from "./images";
 
 export type SitePhotos = Partial<Record<PhotoKey, Pick<PhotoSlot, "src" | "alt">>>;
@@ -6,9 +6,13 @@ export type SitePhotos = Partial<Record<PhotoKey, Pick<PhotoSlot, "src" | "alt">
 export interface CatalogData {
   products: Product[];
   filters: FilterSku[];
+  parts: SparePart[];
   /** Only slots the admin changed; missing keys use the defaults in images.ts. */
   photos: SitePhotos;
 }
+
+/** A backup file. Backups made before spare parts existed have no `parts`; loading one keeps the current parts. */
+export type CatalogImport = Omit<CatalogData, "parts"> & { parts?: SparePart[] };
 
 /**
  * Everything the admin reads and writes goes through this interface, so the storage can be swapped
@@ -24,11 +28,14 @@ export interface CatalogRepository {
   deleteProduct(slug: string): Promise<void>;
   saveFilter(f: FilterSku): Promise<void>;
   deleteFilter(id: string): Promise<void>;
+  /** `previousSlug` is set when an existing part is saved (slugs can't change after creation). */
+  savePart(p: SparePart, previousSlug?: string): Promise<void>;
+  deletePart(slug: string): Promise<void>;
   savePhoto(key: PhotoKey, photo: SitePhotos[PhotoKey] | null): Promise<void>;
   /** Stores an image file and returns the URL to save on the product or photo slot. */
   uploadImage(file: File): Promise<string>;
   /** Replaces the whole catalogue (used by import). */
-  replaceAll(data: CatalogData): Promise<void>;
+  replaceAll(data: CatalogImport): Promise<void>;
   /** Restores the catalogue that ships with the site. */
   reset(): Promise<void>;
 }

@@ -48,8 +48,8 @@ export default function Checkout() {
           shipping: { line1: d.address, city: d.city, province: d.province, postal: d.postal || undefined },
           paymentMethod: PAY_CODES[d.pay],
           install: needsInstall && (d.installDate || d.installSlot) ? { date: d.installDate || undefined, slot: d.installSlot.toLowerCase() || undefined } : undefined,
-          lines: lines.map((l) => filters.some((f) => f.id === l.sku)
-            ? { filterSkuId: l.sku, qty: l.qty }
+          lines: lines.map((l) => filters.some((f) => f.id === l.sku) ? { filterSkuId: l.sku, qty: l.qty }
+            : l.sku.startsWith("part:") ? { sparePartSlug: l.sku.slice("part:".length), qty: l.qty }
             : { productSlug: l.sku, qty: l.qty, configuration: l.options?.configuration, withInstallation: l.options?.installation === "Yes" }),
         },
       });

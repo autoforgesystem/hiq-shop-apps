@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Modal } from "../../components/Modal";
 import { Button, Input } from "../../components/ui";
+import type { ProductImage } from "../../data/types";
 import { IconClose, IconPlus } from "../../components/Icons";
 import { catalogAdmin } from "../../data/catalogStore";
 import { cx } from "../../lib/format";
@@ -139,3 +140,37 @@ export function PhotoDrop({ onUploaded, multiple, label = "Add photos", compact 
 export const Thumb = ({ src, alt, className }: { src?: string; alt: string; className?: string }) =>
   src ? <img src={src} alt={alt} className={cx("aspect-square w-full rounded-lg bg-slate-100 object-cover", className)} />
     : <div className={cx("grid aspect-square w-full place-items-center rounded-lg bg-hiq-sky text-[11px] font-semibold text-hiq-navy/60", className)} aria-label={alt} role="img">No photo</div>;
+
+/** Uploaded photos with alt text, reordering and removal, plus the upload drop zone. The first photo is the main one. */
+export function PhotoList({ id, images, onChange, defaultAlt, altPlaceholder, error }: { id: string; images: ProductImage[]; onChange: (images: ProductImage[]) => void; defaultAlt: string; altPlaceholder: string; error?: string }) {
+  const move = (i: number, to: number) => { const imgs = [...images]; const [m] = imgs.splice(i, 1); imgs.splice(to, 0, m); onChange(imgs); };
+  return (
+    <>
+      {images.length > 0 && (
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {images.map((img, i) => (
+            <li key={i} className={cx("rounded-card p-3 ring-1", i === 0 ? "ring-2 ring-hiq-blue" : "ring-slate-200")}>
+              <div className="relative">
+                <img src={img.src} alt="" className="aspect-square w-full rounded-lg bg-slate-100 object-cover" />
+                {i === 0 && <span className="absolute left-2 top-2 rounded-md bg-hiq-blue px-2 py-0.5 text-sm font-semibold text-white">Main photo</span>}
+              </div>
+              <label htmlFor={`img-alt-${i}`} className="mt-3 block text-sm font-semibold">Describe this photo</label>
+              <Input id={`img-alt-${i}`} value={img.alt} placeholder={altPlaceholder}
+                onChange={(e) => onChange(images.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))} className="mt-1" aria-invalid={!!error && !img.alt.trim()} />
+              <div className="mt-2 flex flex-wrap gap-1">
+                {i > 0 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => move(i, 0)}>Make main photo</Button>}
+                {i > 0 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => move(i, i - 1)} aria-label={`Move photo ${i + 1} earlier`}>← Earlier</Button>}
+                {i < images.length - 1 && <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm" onClick={() => move(i, i + 1)} aria-label={`Move photo ${i + 1} later`}>Later →</Button>}
+                <Button type="button" variant="ghost" className="min-h-[40px] px-3 text-sm text-error hover:bg-red-50" onClick={() => onChange(images.filter((_, j) => j !== i))}>Remove</Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div id={id} tabIndex={-1}>
+        <PhotoDrop multiple label={images.length ? "Add more photos" : "Add photos"} onUploaded={(urls) => onChange([...images, ...urls.map((src) => ({ src, alt: defaultAlt }))])} />
+      </div>
+      {error && <p role="alert" className="text-sm font-medium text-error">{error}</p>}
+    </>
+  );
+}

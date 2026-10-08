@@ -11,6 +11,7 @@ import { cx } from "../lib/format";
 const NAV = [
   { to: "/find-my-system", label: "Find My System" },
   { to: "/filters", label: "Filters" },
+  { to: "/parts", label: "Parts" },
   { to: "/service", label: "Service" },
   { to: "/business", label: "Business" },
   { to: "/guide", label: "Guide" },
@@ -39,6 +40,7 @@ function MegaMenu({ onNavigate }: { onNavigate: () => void }) {
         <div>
           <h3 className="mb-3 text-sm text-slate-600">Shop by product</h3>
           <ul className="grid grid-cols-2 gap-1">{CATEGORIES.map((c) => <li key={c.slug}><Link onClick={onNavigate} to={c.quote ? "/business" : `/shop/${c.slug}`} className="block rounded-lg px-3 py-2 font-semibold hover:bg-hiq-sky">{c.label}{c.quote && <span className="block text-sm font-normal text-slate-600">Request a quote</span>}</Link></li>)}
+            <li><Link onClick={onNavigate} to="/parts" className="block rounded-lg px-3 py-2 font-semibold hover:bg-hiq-sky">Spare parts<span className="block text-sm font-normal text-slate-600">Fittings, tubing, cartridges</span></Link></li>
             <li className="col-span-2"><Link onClick={onNavigate} to="/shop" className="link block px-3 py-2">See all products</Link></li>
           </ul>
         </div>
@@ -102,6 +104,7 @@ export function Header() {
             <div className="space-y-6 p-4">
               <div><p className="mb-1 px-3 text-sm text-slate-600">Shop by product</p>
                 {CATEGORIES.map((c) => <Link key={c.slug} to={c.quote ? "/business" : `/shop/${c.slug}`} className="flex min-h-[44px] items-center rounded-lg px-3 font-semibold hover:bg-hiq-sky">{c.label}</Link>)}
+                <Link to="/parts" className="flex min-h-[44px] items-center rounded-lg px-3 font-semibold hover:bg-hiq-sky">Spare parts</Link>
                 <Link to="/shop" className="flex min-h-[44px] items-center px-3 link">All products</Link>
               </div>
               <div><p className="mb-1 px-3 text-sm text-slate-600">Shop by need</p>

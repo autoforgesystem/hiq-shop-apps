@@ -8,7 +8,7 @@ export interface CommerceAdapter {
 
 export interface CartLine {
   id: string;
-  sku: string; // product slug or filter id
+  sku: string; // product slug, filter id, or "part:<slug>" for a spare part
   name: string;
   qty: number;
   unitPrice: number | null; // null = [PRICE TBC]

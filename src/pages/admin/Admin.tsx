@@ -13,6 +13,8 @@ import { Card, PageHeader } from "./adminUi";
 const AdminProducts = lazy(() => import("./AdminProducts"));
 const ProductEditor = lazy(() => import("./ProductEditor"));
 const AdminFilters = lazy(() => import("./AdminFilters"));
+const AdminParts = lazy(() => import("./AdminParts"));
+const PartEditor = lazy(() => import("./PartEditor"));
 const AdminPhotos = lazy(() => import("./AdminPhotos"));
 const AdminData = lazy(() => import("./AdminData"));
 
@@ -54,7 +56,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
       <form onSubmit={submit} className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lift sm:p-8">
         <LogoMark size={48} />
         <h1 className="mt-3 text-[28px]">Shop admin</h1>
-        <p className="mt-2 text-[15px] text-slate-600">Sign in to manage products, photos and filters.</p>
+        <p className="mt-2 text-[15px] text-slate-600">Sign in to manage products, filters, spare parts and photos.</p>
         {useApi && <div className="mt-6"><FormField label="Email" id="admin-email">
           <Input id="admin-email" type="email" autoComplete="username" value={email} onChange={(e) => { setEmail(e.target.value); setError(""); }} autoFocus />
         </FormField></div>}
@@ -69,7 +71,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
 }
 
 function Dashboard() {
-  const { products, filters, photos } = useCatalog();
+  const { products, filters, parts, photos } = useCatalog();
   const todo: { text: string; to: string }[] = [];
   for (const p of products) {
     if (p.channel === "shop" && p.price == null) todo.push({ text: `${p.model}: add the price`, to: `/admin/products/${p.slug}` });
@@ -79,6 +81,8 @@ function Dashboard() {
   }
   const filtersTodo = filters.filter((f) => f.sku.includes("TBC") || f.price == null || f.intervalMonths == null).length;
   if (filtersTodo) todo.push({ text: `${filtersTodo} replacement filters are missing a SKU, price or replacement interval`, to: "/admin/filters" });
+  const partsTodo = parts.filter((p) => !p.hidden && (p.sku.includes("TBC") || p.price == null || !p.images.length)).length;
+  if (partsTodo) todo.push({ text: `${partsTodo} spare parts are missing a SKU, price or photo`, to: "/admin/parts?show=shown" });
   const usedPhotos = (Object.keys(PHOTO_DEFAULTS) as PhotoKey[]).filter((k) => !PHOTO_PLACES[k].startsWith("Not shown"));
   const missingPhotos = usedPhotos.filter((k) => !photos[k]?.src).length;
   if (missingPhotos) todo.push({ text: `${missingPhotos} website photos are still placeholders`, to: "/admin/photos" });
@@ -87,14 +91,15 @@ function Dashboard() {
     ["Products on the shop", products.filter((p) => !p.hidden).length, "/admin/products"],
     ["Hidden products", products.filter((p) => p.hidden).length, "/admin/products?show=hidden"],
     ["Replacement filters", filters.length, "/admin/filters"],
+    ["Spare parts on the shop", parts.filter((p) => !p.hidden).length, "/admin/parts"],
     ["Things to fill in", todo.length, "#todo"],
   ] as const;
 
   return (
     <>
       <PageHeader title="Dashboard" intro="An overview of the shop and what still needs to be filled in."
-        actions={<><ButtonLink to="/admin/products/new" variant="primary">Add a product</ButtonLink><ButtonLink to="/admin/filters?new=1" variant="outline">Add a filter</ButtonLink></>} />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        actions={<><ButtonLink to="/admin/products/new" variant="primary">Add a product</ButtonLink><ButtonLink to="/admin/filters?new=1" variant="outline">Add a filter</ButtonLink><ButtonLink to="/admin/parts/new" variant="outline">Add a spare part</ButtonLink></>} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {stats.map(([label, n, to]) => {
           const body = <><p className="font-display text-3xl font-bold text-hiq-navy">{n}</p><p className="text-[15px] text-slate-600">{label}</p></>;
           const cls = "rounded-card bg-white p-4 ring-1 ring-slate-200 hover:ring-hiq-blue";
@@ -115,7 +120,7 @@ function Dashboard() {
   );
 }
 
-const NAV = [["", "Dashboard"], ["products", "Products"], ["filters", "Replacement filters"], ["photos", "Website photos"], ["data", "Backup & reset"]] as const;
+const NAV = [["", "Dashboard"], ["products", "Products"], ["filters", "Replacement filters"], ["parts", "Spare parts"], ["photos", "Website photos"], ["data", "Backup & reset"]] as const;
 
 export default function Admin() {
   useSeo({ title: "Shop admin", description: "HIQ Shop administration.", path: "/admin", noindex: true });
@@ -158,6 +163,9 @@ export default function Admin() {
               <Route path="products/new" element={<ProductEditor />} />
               <Route path="products/:slug" element={<ProductEditor />} />
               <Route path="filters" element={<AdminFilters />} />
+              <Route path="parts" element={<AdminParts />} />
+              <Route path="parts/new" element={<PartEditor />} />
+              <Route path="parts/:slug" element={<PartEditor />} />
               <Route path="photos" element={<AdminPhotos />} />
               <Route path="data" element={<AdminData />} />
               <Route path="*" element={<Card title="Page not found"><ButtonLink to="/admin">Back to dashboard</ButtonLink></Card>} />

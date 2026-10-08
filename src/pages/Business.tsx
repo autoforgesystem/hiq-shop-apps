@@ -9,11 +9,13 @@ import { BUSINESS } from "../config/site";
 import { useSeo } from "../lib/seo";
 import { Link } from "react-router-dom";
 
-const SEGMENTS = ["Offices", "Restaurants", "Hotels", "Developers & architects", "Interior designers", "Property managers", "Commercial & industrial"];
+const SEGMENTS = ["Offices", "Restaurants", "Hotels", "Developers & architects", "Interior designers", "Property managers", "Commercial & industrial", "Resellers & installers"];
+const SPARE_PARTS = "Spare parts / bulk cartridges";
 
 export default function Business() {
   const [sp] = useSearchParams();
   const interest = getProduct(sp.get("interest") ?? "");
+  const bulkParts = sp.get("interest") === "spare-parts"; // from the spare parts pages
   useSeo({ title: "Commercial water filtration for offices and businesses", description: "Office dispensers, F&B filtration and commercial RO from HIQ Philippines. Request a quote or talk to a water specialist.", path: "/business" });
   return (
     <>
@@ -62,16 +64,17 @@ export default function Business() {
         <RequestForm subject="Quote request" event="request_quote" submitLabel="Request a Quote"
           success={`HIQ's sales team will reply from ${BUSINESS.email}.`}
           fields={[
-            { name: "segment", label: "Segment", type: "select", options: SEGMENTS, required: true },
+            { name: "segment", label: "Segment", type: "select", options: SEGMENTS, required: true, defaultValue: bulkParts ? "Resellers & installers" : undefined },
             { name: "property", label: "Property type", required: true },
             { name: "location", label: "Location", required: true },
             { name: "users", label: "Number of users or rooms", type: "number", required: true },
-            { name: "solution", label: "Solution of interest", type: "select", options: ["Office dispensers", "HQ9 / F&B filtration", "Commercial RO", "Industrial RO", "Emergency water", "Hotel bottling", "Bottle washers", "Not sure"], defaultValue: interest ? (interest.category === "commercial" ? "Commercial RO" : interest.category === "industrial" ? "Industrial RO" : interest.category === "emergency" ? "Emergency water" : "") : "" },
+            { name: "solution", label: "Solution of interest", type: "select", options: ["Office dispensers", "HQ9 / F&B filtration", "Commercial RO", "Industrial RO", "Emergency water", "Hotel bottling", "Bottle washers", SPARE_PARTS, "Not sure"], defaultValue: bulkParts ? SPARE_PARTS : interest ? (interest.category === "commercial" ? "Commercial RO" : interest.category === "industrial" ? "Industrial RO" : interest.category === "emergency" ? "Emergency water" : "") : "" },
             { name: "timeline", label: "Timeline", type: "select", options: ["As soon as possible", "1–3 months", "3–6 months", "Just researching"] },
             { name: "name", label: "Contact name", required: true, autoComplete: "name" },
             { name: "phone", label: "Mobile number", type: "tel", required: true, autoComplete: "tel" },
             { name: "email", label: "Email", type: "email", required: true, autoComplete: "email" },
-            { name: "notes", label: "Details", type: "textarea", defaultValue: interest ? `Interested in: ${interest.model}` : "" },
+            { name: "notes", label: "Details", type: "textarea", defaultValue: bulkParts ? "Interested in: spare parts in bulk" : interest ? `Interested in: ${interest.model}` : "",
+              hint: bulkParts ? "List the parts and quantities, e.g. 100 × PP sediment cartridge 10\", 5 micron." : undefined },
           ]} />
       </section>
     </>

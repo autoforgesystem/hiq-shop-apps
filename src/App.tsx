@@ -13,6 +13,8 @@ const Product = lazy(() => import("./pages/Product"));
 const Compare = lazy(() => import("./pages/Compare"));
 const FindMySystem = lazy(() => import("./pages/FindMySystem"));
 const Filters = lazy(() => import("./pages/Filters"));
+const Parts = lazy(() => import("./pages/Parts"));
+const PartDetail = lazy(() => import("./pages/PartDetail"));
 const Service = lazy(() => import("./pages/Service"));
 const ServiceBook = lazy(() => import("./pages/ServiceBook"));
 const Rent = lazy(() => import("./pages/Rent"));
@@ -48,6 +50,8 @@ export default function App() {
                 <Route path="compare" element={<Compare />} />
                 <Route path="find-my-system" element={<FindMySystem />} />
                 <Route path="filters" element={<Filters />} />
+                <Route path="parts" element={<Parts />} />
+                <Route path="parts/:slug" element={<PartDetail />} />
                 <Route path="service" element={<Service />} />
                 <Route path="service/book" element={<ServiceBook />} />
                 <Route path="rent" element={<Rent />} />
