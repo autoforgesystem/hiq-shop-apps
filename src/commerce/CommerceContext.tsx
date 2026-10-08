@@ -40,7 +40,8 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   useEffect(() => (adapter instanceof MockAdapter ? adapter.subscribe(setLines) : undefined), [adapter]);
 
   const value: Ctx = {
-    adapter, lines, count: lines.reduce((n, l) => n + l.qty, 0),
+    // Tubing by the meter counts as one item, so 25 m doesn't show as 25 in the cart badge.
+    adapter, lines, count: lines.reduce((n, l) => n + (partFromSku(l.sku)?.unit === "meter" ? 1 : l.qty), 0),
     add: async (sku, qty = 1, options) => {
       try {
         await adapter.addToCart(sku, qty, options);

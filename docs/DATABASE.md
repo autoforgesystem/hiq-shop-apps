@@ -16,8 +16,11 @@ erDiagram
     ORDERS ||--|{ ORDER_LINES : contains
     PRODUCTS |o--o{ ORDER_LINES : "sold as"
     FILTER_SKUS |o--o{ ORDER_LINES : "sold as"
+    SPARE_PARTS |o--o{ ORDER_LINES : "sold as"
     PRODUCTS ||--o{ FILTER_COMPATIBILITY : accepts
     FILTER_SKUS ||--o{ FILTER_COMPATIBILITY : fits
+    PRODUCTS ||--o{ SPARE_PART_COMPATIBILITY : takes
+    SPARE_PARTS ||--o{ SPARE_PART_COMPATIBILITY : fits
     CUSTOMERS ||--o{ UNITS : owns
     PRODUCTS ||--o{ UNITS : "installed as"
     ORDERS |o--o{ UNITS : "delivered as"
@@ -81,6 +84,10 @@ erDiagram
 
 Needs, filtration types and configurations are lookup tables so the shop filters and the Find My System quiz can join on them. `slug` never changes once created.
 
+Two kinds of thing are sold besides systems:
+- **Replacement filters** (`filter_skus`) are made for specific HIQ models and drive filter reminders and subscriptions.
+- **Spare parts** (`spare_parts`) are fittings, tubing, faucets, valves, housings and general-purpose cartridges. Each size is its own row with its own SKU. A part with no rows in `spare_part_compatibility` fits any system of that size. `unit` says what the price and quantity count: a piece, a meter of tubing or a pack.
+
 ```mermaid
 erDiagram
     PRODUCTS ||--o{ PRODUCT_IMAGES : shows
@@ -93,6 +100,8 @@ erDiagram
     CONFIGURATIONS ||--o{ PRODUCT_CONFIGURATIONS : "available on"
     PRODUCTS ||--o{ FILTER_COMPATIBILITY : accepts
     FILTER_SKUS ||--o{ FILTER_COMPATIBILITY : fits
+    PRODUCTS ||--o{ SPARE_PART_COMPATIBILITY : takes
+    SPARE_PARTS ||--o{ SPARE_PART_COMPATIBILITY : fits
 
     PRODUCTS {
         uuid id PK
@@ -176,6 +185,26 @@ erDiagram
         uuid filter_sku_id PK, FK
         uuid product_id PK, FK
     }
+    SPARE_PARTS {
+        uuid id PK
+        varchar slug UK "never changes"
+        varchar sku "[PART SKU TBC] until confirmed"
+        varchar name "includes the size"
+        varchar category "fittings, hoses-tubing, filter-cartridges, faucets, valves, housings, other"
+        text description
+        json specs "label to value, null = TBC; json keeps the label order"
+        jsonb images "[{ src, alt }], first = main photo"
+        varchar unit "piece, meter or pack"
+        int price_centavos "per unit, null = TBC"
+        boolean is_hidden
+        int sort_order
+        timestamp created_at
+        timestamp updated_at
+    }
+    SPARE_PART_COMPATIBILITY {
+        uuid spare_part_id PK, FK
+        uuid product_id PK, FK
+    }
     SITE_PHOTOS {
         uuid id PK
         varchar photo_key UK
@@ -187,7 +216,7 @@ erDiagram
 
 ## Orders
 
-Guests can check out, so `customer_id` is optional and the contact and delivery details are copied onto the order. Each line is either a product or a replacement filter.
+Guests can check out, so `customer_id` is optional and the contact and delivery details are copied onto the order. Each line is exactly one of: a product, a replacement filter or a spare part. Products and filters go up to 20 per line; spare parts up to 500, for tubing by the meter and reseller packs.
 
 ```mermaid
 erDiagram
@@ -195,6 +224,7 @@ erDiagram
     ORDERS ||--|{ ORDER_LINES : contains
     PRODUCTS |o--o{ ORDER_LINES : "sold as"
     FILTER_SKUS |o--o{ ORDER_LINES : "sold as"
+    SPARE_PARTS |o--o{ ORDER_LINES : "sold as"
 
     ORDERS {
         uuid id PK
@@ -222,8 +252,9 @@ erDiagram
     ORDER_LINES {
         uuid id PK
         uuid order_id FK
-        uuid product_id FK "null if filter line"
-        uuid filter_sku_id FK "null if product line"
+        uuid product_id FK "product lines only"
+        uuid filter_sku_id FK "filter lines only"
+        uuid spare_part_id FK "spare part lines only"
         varchar name "snapshot"
         varchar mode "buy or rent"
         varchar configuration
@@ -384,7 +415,7 @@ erDiagram
     AUDIT_LOG {
         uuid id PK
         uuid admin_user_id FK
-        varchar entity "products, filter_skus, site_photos"
+        varchar entity "products, filter_skus, spare_parts, site_photos"
         uuid entity_id
         varchar action "create, update, delete"
         jsonb changes

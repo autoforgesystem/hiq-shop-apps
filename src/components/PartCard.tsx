@@ -3,7 +3,7 @@ import type { SparePart } from "../data/types";
 import { partPhoto } from "../data/images";
 import { PART_UNIT_LABEL, partCategoryLabel, partSku } from "../data/catalog";
 import { PhotoFrame } from "./PhotoFrame";
-import { Button, ButtonLink, PriceTag } from "./ui";
+import { Button, PriceTag } from "./ui";
 import { useCommerce } from "../commerce/CommerceContext";
 
 /** The first two specs that are filled in, e.g. "Tube size: 1/4" · Connection: Push-fit". */
@@ -22,10 +22,8 @@ export function PartCard({ p }: { p: SparePart }) {
         {keySpecs(p) && <p className="mt-1 text-sm text-slate-600">{keySpecs(p)}</p>}
         <div className="mt-auto pt-4">
           <div className="flex flex-wrap items-baseline gap-x-1.5"><PriceTag price={p.price} />{p.price != null && <span className="text-sm text-slate-600">{PART_UNIT_LABEL[p.unit]}</span>}</div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <ButtonLink to={`/parts/${p.slug}`} variant="outline">View</ButtonLink>
-            <Button variant="secondary" onClick={() => add(partSku(p.slug), 1)}>Add to cart</Button>
-          </div>
+          {/* One button: cards are narrow (four across, two on phones), and the photo and name already open the part. */}
+          <Button variant="secondary" full className="mt-3" onClick={() => add(partSku(p.slug), 1)}>Add to cart</Button>
         </div>
       </div>
     </article>

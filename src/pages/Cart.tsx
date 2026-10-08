@@ -24,7 +24,7 @@ export default function Cart() {
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{getProduct(l.sku) ? <Link to={`/product/${l.sku}`} className="hover:text-hiq-blue">{l.name}</Link>
                   : part ? <Link to={`/parts/${part.slug}`} className="hover:text-hiq-blue">{l.name}</Link> : l.name}</p>
-                {part && part.unit !== "piece" && <p className="text-sm text-slate-600">Quantity in {part.unit === "meter" ? "meters" : "packs"} · price {PART_UNIT_LABEL[part.unit]}</p>}
+                {part && part.unit !== "piece" && <p className="text-sm text-slate-600">Quantity in {part.unit === "meter" ? "meters" : "packs"}{l.unitPrice != null && ` · price ${PART_UNIT_LABEL[part.unit]}`}</p>}
                 {l.options && <p className="text-sm text-slate-600">{Object.entries(l.options).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>}
                 {l.options?.installation === "Yes" && <p className="text-sm text-slate-600">Installation add-on: <span className="tbc">[TBC]</span></p>}
               </div>

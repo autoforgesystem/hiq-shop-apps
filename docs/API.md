@@ -11,7 +11,8 @@ Set `VITE_API_URL` (e.g. `http://localhost:3000/api`) and restart the dev server
 | Sign in / register (`src/lib/auth.tsx`) | `/auth/login`, `/auth/register`; token in localStorage ("Keep me signed in") or sessionStorage | Demo accounts in this browser |
 | Catalogue (`src/data/ApiCatalogRepository.ts`) | `GET /catalog`; the admin uses `/admin/*` | `MockCatalogRepository` (IndexedDB) |
 | Account pages (`src/pages/account/useAccountData.ts`) | `/me/units`, `/me/orders`, `/me/bookings`, `/me/addresses` | `mockData.ts` |
-| Checkout (`src/pages/Checkout.tsx`) | `POST /orders`, priced by the server | Local order number |
+| Spare parts (`src/pages/Parts.tsx`, `PartDetail.tsx`) | Part of `GET /catalog`; also `GET /parts?category=&model=` and `GET /parts/:slug` | Example parts in `src/data/parts.json` |
+| Checkout (`src/pages/Checkout.tsx`) | `POST /orders`, priced by the server. Each line is `{ productSlug }`, `{ filterSkuId }` or `{ sparePartSlug }` with a `qty` | Local order number |
 | Service booking (`src/pages/ServiceBook.tsx`) | `POST /bookings`, linked to the customer's unit | `submitForm` (email) |
 | Quote, rental, contact and newsletter forms (`src/lib/forms.ts`) | `POST /leads` | `VITE_FORM_ENDPOINT` or mailto |
 | Admin sign-in (`src/pages/admin/Admin.tsx`) | Email and password of an admin account | Demo password |
